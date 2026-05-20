@@ -5,3 +5,4 @@ google-generativeai
 finnhub-python
 requests
 pandas
+plotly
