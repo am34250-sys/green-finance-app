@@ -288,7 +288,7 @@ def init_clients():
     else:
         bq = bigquery.Client(project=PROJECT_ID)
     genai.configure(api_key=GEMINI_KEY)
-    gem = genai.GenerativeModel("gemini-2.0-flash")
+    gem = genai.GenerativeModel("gemini-1.5-flash")
     return bq, gem
 
 bq_client, gemini_model = init_clients()
@@ -514,7 +514,22 @@ with left:
         "Sector": df["sector"].apply(lambda x: x[:14]+"..." if len(x)>14 else x),
     })
 
-    st.dataframe(display_df, use_container_width=True, hide_index=True, height=420)
+    st.dataframe(
+    display_df, 
+    use_container_width=True, 
+    hide_index=True, 
+    height=420,
+    column_config={
+        "Symbol": st.column_config.TextColumn(width="small"),
+        "Company": st.column_config.TextColumn(width="medium"),
+        "Price": st.column_config.TextColumn(width="small"),
+        "Change": st.column_config.TextColumn(width="small"),
+        "Risk": st.column_config.TextColumn(width="small"),
+        "Green": st.column_config.TextColumn(width="small"),
+        "ESG": st.column_config.TextColumn(width="small"),
+        "Sector": st.column_config.TextColumn(width="medium"),
+    }
+)
 
     # Sector pie chart
     st.markdown("<br>", unsafe_allow_html=True)
