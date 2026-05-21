@@ -2,8 +2,8 @@ streamlit
 google-cloud-bigquery
 google-auth
 google-generativeai
+google-genai
 finnhub-python
 requests
 pandas
 plotly
-google-genai
