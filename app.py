@@ -97,8 +97,23 @@ def get_data():
     return [dict(row) for row in bq_client.query(q).result()]
 
 def ask_gemini(q, data):
-    info = "".join([f"- {d['symbol']} ({d['name']}): Price=${d['price']:.2f}, Risk={d['financial_risk_score']}, Green={d['green_score']}, ESG={d['esg_rating']}\n" for d in data[:12]])
-    return gemini_model.generate_content(f"Senior Green Finance AI Analyst.\nData:\n{info}\nQuestion: {q}\nMax 120 words.").text
+    try:
+        info = "".join([
+            f"- {d['symbol']} ({d['name']}): Price=${d['price']:.2f}, "
+            f"Risk={d['financial_risk_score']}, Green={d['green_score']}, "
+            f"ESG={d['esg_rating']}\n"
+            for d in data[:10]
+        ])
+        prompt = (
+            "You are a Green Finance AI Analyst. "
+            "Answer in maximum 100 words. "
+            f"Company data:\n{info}\n"
+            f"Question: {q}"
+        )
+        response = gemini_model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"⚠️ Gabim gjatë analizës: {str(e)[:200]}"
 
 def svg_spark(trend="up", seed=1):
     pts, w, h = 24, 300, 28
