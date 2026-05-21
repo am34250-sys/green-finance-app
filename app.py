@@ -113,7 +113,7 @@ def ask_gemini(q, data):
         response = gemini_model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"⚠️ Gabim gjatë analizës: {str(e)[:200]}"
+        return f"⚠️ Gabim: {str(e)[:200]}"
 
 def svg_spark(trend="up", seed=1):
     pts, w, h = 24, 300, 28
@@ -251,7 +251,7 @@ with L:
 
 
 with R:
-    # AI Assistant header
+    # 1. AI Assistant header
     st.markdown(f"""<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px 16px 12px 16px;margin-bottom:6px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <div>
@@ -268,14 +268,7 @@ with R:
         </div>
     </div>""", unsafe_allow_html=True)
 
-    # Input bar
-    ci, cb = st.columns([5,1])
-    with ci:
-        user_input = st.text_input("", placeholder="Ask me anything...", label_visibility="collapsed", key="chat_input")
-    with cb:
-        send = st.button("➤", use_container_width=True, key="send_btn")
-
-    # Quick Analysis — te gjitha brenda container(border=True)
+    # 2. Quick Analysis — SIPER
     with st.container(border=True):
         st.markdown("**Quick Analysis**")
         qa, qb = st.columns(2, gap="small")
@@ -290,7 +283,14 @@ with R:
             if st.button("⚠️  Companies to Watch", use_container_width=True, key="q4"):
                 st.session_state.auto_q = "Which companies should investors watch carefully?"
 
-    # Chat messages
+    # 3. Input bar
+    ci, cb = st.columns([5,1])
+    with ci:
+        user_input = st.text_input("", placeholder="Ask me anything...", label_visibility="collapsed", key="chat_input")
+    with cb:
+        send = st.button("➤", use_container_width=True, key="send_btn")
+
+    # 4. Chat messages — POSHTE
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
