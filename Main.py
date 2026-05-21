@@ -73,7 +73,8 @@ def init_clients():
             st.error("GEMINI_KEY mungon ne Streamlit Secrets.")
             st.stop()
         genai.configure(api_key=GEMINI_KEY)
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        # gemini-2.0-flash-lite: limit me i larte falas, me i shpejte
+        model = genai.GenerativeModel("gemini-2.0-flash-lite")
     except Exception as e:
         st.error(f"Gemini inicializimi deshtoi: {e}")
         st.stop()
@@ -96,24 +97,23 @@ def get_data():
     """
     return [dict(row) for row in bq_client.query(q).result()]
 
-def ask_gemini(q, data):
+# Cache 5 minuta — e njejta pyetje nuk ben thirrje te re API
+@st.cache_data(ttl=300)
+def ask_gemini(question, data_str):
     try:
-        info = "".join([
-            f"- {d['symbol']} ({d['name']}): Price=${d['price']:.2f}, "
-            f"Risk={d['financial_risk_score']}, Green={d['green_score']}, "
-            f"ESG={d['esg_rating']}\n"
-            for d in data[:10]
-        ])
         prompt = (
             "You are a Green Finance AI Analyst. "
             "Answer in maximum 100 words. "
-            f"Company data:\n{info}\n"
-            f"Question: {q}"
+            f"Company data:\n{data_str}\n"
+            f"Question: {question}"
         )
         response = gemini_model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"⚠️ Gabim: {str(e)[:200]}"
+        err = str(e)
+        if "429" in err:
+            return "⚠️ Kemi arritur limitin e API. Provo perseri pas 1 minute."
+        return f"⚠️ Gabim: {err[:200]}"
 
 def svg_spark(trend="up", seed=1):
     pts, w, h = 24, 300, 28
@@ -268,7 +268,7 @@ with R:
         </div>
     </div>""", unsafe_allow_html=True)
 
-    # 2. Quick Analysis — SIPER
+    # 2. Quick Analysis
     with st.container(border=True):
         st.markdown("**Quick Analysis**")
         qa, qb = st.columns(2, gap="small")
@@ -290,7 +290,7 @@ with R:
     with cb:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
-    # 4. Chat messages — POSHTE
+    # 4. Chat messages
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -302,14 +302,20 @@ with R:
         del st.session_state.auto_q
 
     if question:
-        st.session_state.messages.append({"role":"user","content":question})
+        st.session_state.messages.append({"role": "user", "content": question})
         with st.spinner("Analyzing..."):
-            answer = ask_gemini(question, data)
-        st.session_state.messages.append({"role":"ai","content":answer})
+            # Pergato data_str per cache
+            info = "".join([
+                f"- {d['symbol']} ({d['name']}): Risk={d['financial_risk_score']}, "
+                f"Green={d['green_score']}, ESG={d['esg_rating']}\n"
+                for d in data[:10]
+            ])
+            answer = ask_gemini(question, info)
+        st.session_state.messages.append({"role": "ai", "content": answer})
         st.rerun()
 
     for msg in st.session_state.messages[-6:]:
-        cls = "umsg" if msg["role"]=="user" else "amsg"
+        cls = "umsg" if msg["role"] == "user" else "amsg"
         st.markdown(f'<div class="{cls}">{msg["content"]}</div>', unsafe_allow_html=True)
 
 st.markdown("""<div style="text-align:center;padding:6px;color:#94a3b8;font-size:9px;border-top:1px solid #f1f5f9;margin-top:6px;">
