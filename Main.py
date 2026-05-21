@@ -67,7 +67,6 @@ GEMINI_KEY = st.secrets.get("GEMINI_KEY", "")
 PROJECT_ID = st.secrets.get("PROJECT_ID", "green-finance-ai")
 GCP_CREDENTIALS = st.secrets.get("GCP_CREDENTIALS", None)
 
-@st.cache_resource
 def init_clients():
     try:
         if GCP_CREDENTIALS:
