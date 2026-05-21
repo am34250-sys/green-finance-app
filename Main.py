@@ -249,29 +249,29 @@ with R:
     with cb:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
-    # Quick Analysis
+    # Quick Analysis - gjelbër si imazhi 1
     st.markdown("""
     <style>
     .qa-wrap .stButton button {
-        background: #eff6ff !important;
-        border: 1px solid #bfdbfe !important;
-        border-radius: 12px !important;
-        color: #1d4ed8 !important;
+        background: #f0fdf4 !important;
+        border: 1px solid #dcfce7 !important;
+        border-radius: 10px !important;
+        color: #15803d !important;
         font-size: 12px !important;
         font-weight: 500 !important;
-        padding: 12px 14px !important;
-        height: 52px !important;
+        padding: 10px 14px !important;
+        height: 44px !important;
     }
     .qa-wrap .stButton button:hover {
-        background: #dbeafe !important;
-        border-color: #93c5fd !important;
+        background: #dcfce7 !important;
+        border-color: #86efac !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin-top:6px;">
-        <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:12px;">Quick Analysis</div>
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:16px 16px 6px 16px;margin-top:6px;">
+        <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:10px;">Quick Analysis</div>
     </div>
     """, unsafe_allow_html=True)
 
