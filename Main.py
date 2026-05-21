@@ -237,6 +237,25 @@ with R:
     Ask: investment strategy · ESG leaders · financial risks</div>""", unsafe_allow_html=True)
 
     question = st.chat_input("Ask me anything...")
+
+    st.markdown('<div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin:8px 0 5px;">Quick Analysis</div>', unsafe_allow_html=True)
+
+    qa,qb=st.columns(2)
+    with qa:
+        if st.button("🏆 Best Investment",use_container_width=True,key="q1"):
+            st.session_state.auto_q="Which company is the best investment combining financial and ESG performance?"
+        if st.button("📊 Risk Comparison",use_container_width=True,key="q3"):
+            st.session_state.auto_q="Compare highest and lowest risk companies"
+    with qb:
+        if st.button("🌍 ESG Leaders",use_container_width=True,key="q2"):
+            st.session_state.auto_q="Which companies are the ESG sustainability leaders?"
+        if st.button("⚠️ Watch List",use_container_width=True,key="q4"):
+            st.session_state.auto_q="Which companies should investors watch carefully?"
+
+    if "auto_q" in st.session_state:
+        question=st.session_state.auto_q
+        del st.session_state.auto_q
+
     if question:
         st.session_state.messages.append({"role":"user","content":question})
         with st.spinner("Analyzing..."):
