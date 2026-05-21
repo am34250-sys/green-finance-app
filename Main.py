@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import plotly.graph_objects as go
 import numpy as np
+import math
 
 st.set_page_config(
     page_title="Green Finance Intelligence",
@@ -33,23 +34,12 @@ section[data-testid="stSidebar"] .stButton button {
     text-align: left !important; padding: 7px 12px !important;
     border-radius: 8px !important; width: 100% !important;
 }
-section[data-testid="stSidebar"] .stButton button:hover {
-    background: #1e293b !important; color: #f1f5f9 !important;
-}
-section[data-testid="stSidebar"] .stButton:first-of-type button {
-    background: #059669 !important; color: white !important;
-}
+section[data-testid="stSidebar"] .stButton button:hover { background: #1e293b !important; color: #f1f5f9 !important; }
+section[data-testid="stSidebar"] .stButton:first-of-type button { background: #059669 !important; color: white !important; }
 
-.dot{width:5px;height:5px;background:#22c55e;border-radius:50%;animation:b 2s infinite;display:inline-block;}
-@keyframes b{0%,100%{opacity:1}50%{opacity:0.2}}
+.dot{width:5px;height:5px;background:#22c55e;border-radius:50%;animation:bl 2s infinite;display:inline-block;}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:0.2}}
 .pill{display:inline-flex;align-items:center;gap:4px;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;}
-
-.kpi{background:white;border-radius:12px;padding:14px 16px;border:1px solid #e2e8f0;}
-.kpi-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:8px;}
-.kpi-val{font-size:26px;font-weight:700;line-height:1;}
-.kpi-lbl{font-size:11px;color:#64748b;margin-top:3px;}
-.kpi-trend{font-size:10px;margin-top:6px;font-weight:500;}
-.up{color:#059669;} .dn{color:#dc2626;}
 
 .card{background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:10px;}
 .ch{padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;}
@@ -113,17 +103,38 @@ def ask_gemini(q, data):
     info = "".join([f"- {d['symbol']} ({d['name']}): Price=${d['price']:.2f}, Risk={d['financial_risk_score']}, Green={d['green_score']}, ESG={d['esg_rating']}\n" for d in data[:12]])
     return gemini_model.generate_content(f"Senior Green Finance AI Analyst.\nData:\n{info}\nQuestion: {q}\nMax 120 words.").text
 
-def make_spark(trend="up", seed=1):
-    x = np.linspace(0, 4*np.pi, 24)
-    y = np.sin(x + seed) + np.linspace(0, 1.5 if trend=="up" else -1.5, 24) * 0.5
+# SVG Sparkline inline
+def svg_spark(trend="up", seed=1, w=120, h=40):
+    pts = 20
+    xs = [i * w / (pts-1) for i in range(pts)]
+    ys_raw = [math.sin(i*0.7 + seed) + (i/pts * 1.5 if trend=="up" else -i/pts * 1.5) for i in range(pts)]
+    mn, mx = min(ys_raw), max(ys_raw)
+    ys = [h - 4 - (y - mn)/(mx - mn + 0.001) * (h-8) for y in ys_raw]
     color = "#22c55e" if trend == "up" else "#ef4444"
-    fill = "rgba(34,197,94,0.08)" if trend == "up" else "rgba(239,68,68,0.08)"
-    fig = go.Figure(go.Scatter(x=list(range(24)), y=y.tolist(), mode="lines",
-        line=dict(color=color, width=1.5), fill="tozeroy", fillcolor=fill))
-    fig.update_layout(margin=dict(t=0,b=0,l=0,r=0), height=35,
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(visible=False), yaxis=dict(visible=False))
-    return fig
+    fill_color = "rgba(34,197,94,0.08)" if trend == "up" else "rgba(239,68,68,0.08)"
+    pts_str = " ".join(f"{x:.1f},{y:.1f}" for x, y in zip(xs, ys))
+    fill_pts = f"0,{h} " + pts_str + f" {w},{h}"
+    return f"""<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="{fill_pts}" fill="{fill_color}" stroke="none"/>
+        <polyline points="{pts_str}" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>"""
+
+def kpi_card(ico, ico_bg, lbl, lbl_color, val, val_color, trend_txt, trend_color, spark_trend, seed):
+    spark = svg_spark(spark_trend, seed)
+    return f"""
+    <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;padding:14px 16px;overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div style="width:30px;height:30px;background:{ico_bg};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">{ico}</div>
+            <span style="font-size:12px;color:#64748b;font-weight:500;">{lbl}</span>
+        </div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;">
+            <div style="font-size:30px;font-weight:700;color:{val_color};line-height:1;">{val}</div>
+            <div style="font-size:10px;font-weight:500;color:{trend_color};">{trend_txt}</div>
+        </div>
+        <div style="margin-top:8px;margin-left:-16px;margin-right:-16px;margin-bottom:-14px;">
+            {spark.replace(f'width="{120}"', 'width="100%"').replace('xmlns="http://www.w3.org/2000/svg"', 'xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%"')}
+        </div>
+    </div>"""
 
 data = get_data()
 df = pd.DataFrame(data)
@@ -171,7 +182,7 @@ with st.sidebar:
 h1, h2 = st.columns([3,1])
 with h1:
     st.markdown("""
-    <div style="margin-bottom:14px;">
+    <div style="margin-bottom:12px;">
         <div style="font-size:18px;font-weight:700;color:#0f172a;">Welcome to Green Finance Intelligence! 👋</div>
         <div style="font-size:11px;color:#64748b;margin-top:1px;">Here's what's happening with your green finance portfolio today.</div>
     </div>""", unsafe_allow_html=True)
@@ -181,36 +192,23 @@ with h2:
         <div class="pill"><div class="dot"></div>Live · {total} companies</div>
     </div>""", unsafe_allow_html=True)
 
-# KPI CARDS
+# KPI CARDS — ikona + emri rreshti 1, numri + trend rreshti 2, sparkline rreshti 3
 k1,k2,k3,k4 = st.columns(4)
-kpis=[
-    (k1,"#f0fdf4","👥",total,"#059669","Companies Tracked","up","↑ Updated live","up",1),
-    (k2,"#fef2f2","⚠️",high_risk,"#dc2626","High Risk","dn","↓ Risk ≥ 60","down",2),
-    (k3,"#eff6ff","✅",low_risk,"#2563eb","Low Risk","up","↑ Risk ≤ 20","up",3),
-    (k4,"#fff7ed","🌱",avg_green,"#d97706","Avg Green Score","up","↑ Sustainability","up",4),
-]
-for col,bg,ico,val,color,lbl,tc,tt,td,seed in kpis:
-    with col:
-        st.markdown(f"""
-        <div class="kpi">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                <div class="kpi-ico" style="background:{bg};margin-bottom:0;">{ico}</div>
-            </div>
-            <div class="kpi-val" style="color:{color};">{val}</div>
-            <div class="kpi-lbl">{lbl}</div>
-            <div class="kpi-trend {'up' if tc=='up' else 'dn'}">{tt}</div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.plotly_chart(make_spark(td, seed), use_container_width=True,
-                       config={"displayModeBar":False}, key=f"sp_{seed}")
+with k1:
+    st.markdown(kpi_card("👥","#f0fdf4","Companies Tracked","#64748b",total,"#059669","↑ Updated live","#059669","up",1), unsafe_allow_html=True)
+with k2:
+    st.markdown(kpi_card("⚠️","#fef2f2","High Risk","#64748b",high_risk,"#dc2626","↓ Risk ≥ 60","#dc2626","down",2), unsafe_allow_html=True)
+with k3:
+    st.markdown(kpi_card("✅","#eff6ff","Low Risk","#64748b",low_risk,"#2563eb","↑ Risk ≤ 20","#059669","up",3), unsafe_allow_html=True)
+with k4:
+    st.markdown(kpi_card("🌱","#fff7ed","Avg Green Score","#64748b",avg_green,"#d97706","↑ Sustainability","#059669","up",4), unsafe_allow_html=True)
 
-st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
-# MAIN LAYOUT — tabela majtas, AI djathtas
+# MAIN LAYOUT
 L, R = st.columns([14,9], gap="medium")
 
 with L:
-    # TABLE
     st.markdown("""<div class="card"><div class="ch">
         <div style="display:flex;align-items:center;gap:5px;"><div class="dot"></div><span class="ct">Live Company Scores</span></div>
         <div class="rpill"><div class="dot"></div>Auto-refresh · 60s</div>
@@ -231,8 +229,9 @@ with L:
     })
     st.dataframe(ddf, use_container_width=True, hide_index=True, height=300)
 
-    # SECTOR CHART — poshtë tabelës
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+
+    # SECTOR CHART
     st.markdown("""<div class="card"><div class="ch">
         <span class="ct">Sector Breakdown</span>
         <span style="font-size:9px;color:#64748b;">Live</span>
@@ -273,7 +272,7 @@ with L:
             c=lg2[0]
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #f59e0b;">
                 <div class="aico" style="background:#fffbeb;">🏭</div>
-                <div><div class="at">Low ESG</div>
+                <div><div class="at">Low ESG Score</div>
                 <div class="ad">{c['symbol']} {c['green_score']}/100</div>
                 <div class="atm">15m ago</div></div></div>""", unsafe_allow_html=True)
         else:
@@ -291,7 +290,6 @@ with L:
                 <div class="atm">1h ago</div></div></div>""", unsafe_allow_html=True)
 
 with R:
-    # AI ASSISTANT
     st.markdown("""<div class="ai-box"><div class="ai-h">
         <div style="display:flex;align-items:center;gap:7px;">
             <div class="ai-ico">🤖</div>
