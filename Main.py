@@ -183,15 +183,15 @@ with L:
         colors = ["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
         fig = go.Figure(go.Pie(labels=sd["Sector"], values=sd["Count"], hole=0.6,
             marker_colors=colors[:len(sd)], textinfo="percent", textfont_size=8))
-        fig.update_layout(height=180, margin=dict(t=0,b=0,l=0,r=100),
+        fig.update_layout(height=220, margin=dict(t=0,b=0,l=0,r=110),
             paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
-            legend=dict(font=dict(size=8), orientation="v", x=1.02, y=0.5, xanchor="left"),
-            annotations=[dict(text=f"<b>{total}</b>", x=0.35, y=0.5, font_size=13, showarrow=False)])
+            legend=dict(font=dict(size=9), orientation="v", x=1.02, y=0.5, xanchor="left"),
+            annotations=[dict(text=f"<b>{total}</b><br><span style='font-size:10px'>Total</span>", x=0.35, y=0.5, font_size=13, showarrow=False)])
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
 
     with ac:
         st.markdown("""<div class="card"><div class="ch">
-            <span class="ct">🔔 Alerts</span>
+            <span class="ct">🔔 Recent Alerts</span>
             <span style="font-size:9px;color:#059669;font-weight:600;">View all →</span>
         </div></div>""", unsafe_allow_html=True)
         hr2=[d for d in data if d["financial_risk_score"]>=60]
@@ -201,28 +201,39 @@ with L:
             c=hr2[0]
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #dc2626;">
                 <div class="aico" style="background:#fef2f2;">⚠️</div>
-                <div><div class="at">High Risk — {c['symbol']}</div>
-                <div class="ad">Score {c['financial_risk_score']}/100</div>
+                <div><div class="at">High Risk — {c['name'][:18]}</div>
+                <div class="ad">{c['symbol']} · Risk score {c['financial_risk_score']}/100 · {c['sector'][:14]}</div>
                 <div class="atm">Just now</div></div></div>""", unsafe_allow_html=True)
         if lg2:
             c=lg2[0]
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #f59e0b;">
                 <div class="aico" style="background:#fffbeb;">🏭</div>
-                <div><div class="at">Low ESG — {c['symbol']}</div>
-                <div class="ad">Score {c['green_score']}/100</div>
+                <div><div class="at">Low ESG — {c['name'][:18]}</div>
+                <div class="ad">{c['symbol']} · Green score {c['green_score']}/100 · ESG {c['esg_rating']}</div>
                 <div class="atm">15m ago</div></div></div>""", unsafe_allow_html=True)
         else:
             st.markdown("""<div class="alrt" style="border-left:3px solid #22c55e;">
                 <div class="aico" style="background:#f0fdf4;">✅</div>
-                <div><div class="at">ESG Healthy</div>
-                <div class="ad">All stable</div>
-                <div class="atm">Now</div></div></div>""", unsafe_allow_html=True)
+                <div><div class="at">ESG Scores Healthy</div>
+                <div class="ad">All tracked companies have stable ESG metrics</div>
+                <div class="atm">Updated now</div></div></div>""", unsafe_allow_html=True)
         if bc2:
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #3b82f6;">
                 <div class="aico" style="background:#eff6ff;">🌿</div>
-                <div><div class="at">ESG Leader — {bc2['symbol']}</div>
-                <div class="ad">Score {bc2['green_score']}/100</div>
+                <div><div class="at">ESG Leader — {bc2['name'][:18]}</div>
+                <div class="ad">{bc2['symbol']} · Green score {bc2['green_score']}/100 · ESG {bc2['esg_rating']}</div>
                 <div class="atm">1h ago</div></div></div>""", unsafe_allow_html=True)
+        # Shto statistika poshtë
+        st.markdown(f"""
+        <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:8px;padding:8px 10px;margin-top:4px;">
+            <div style="font-size:9px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Portfolio Summary</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <div><div style="font-size:16px;font-weight:700;color:#059669;">{low_risk}</div><div style="font-size:9px;color:#64748b;">Safe Investments</div></div>
+                <div><div style="font-size:16px;font-weight:700;color:#dc2626;">{high_risk}</div><div style="font-size:9px;color:#64748b;">High Risk</div></div>
+                <div><div style="font-size:16px;font-weight:700;color:#d97706;">{avg_green}</div><div style="font-size:9px;color:#64748b;">Avg Green Score</div></div>
+                <div><div style="font-size:16px;font-weight:700;color:#2563eb;">{total}</div><div style="font-size:9px;color:#64748b;">Total Tracked</div></div>
+            </div>
+        </div>""", unsafe_allow_html=True)
 
 with R:
     # AI ASSISTANT — dizajni i ri
