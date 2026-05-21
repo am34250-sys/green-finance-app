@@ -249,11 +249,26 @@ with R:
     with cb:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
-    # Quick Analysis brenda box vijues
+    # Quick Analysis me ngjyra
     st.markdown("""<div style="background:white;border-radius:0 0 14px 14px;border:1px solid #e2e8f0;border-top:none;padding:10px 16px 14px 16px;margin-top:-8px;">
-        <div style="font-size:11px;font-weight:600;color:#0f172a;margin-bottom:8px;">Quick Analysis</div>
+        <div style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:10px;">Quick Analysis</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button onclick="" style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:12px;padding:10px 12px;font-size:11px;font-weight:500;color:#15803d;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:16px;">🏆</span><span>Best Investment</span>
+            </button>
+            <button onclick="" style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:12px;padding:10px 12px;font-size:11px;font-weight:500;color:#15803d;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:16px;">🌍</span><span>ESG Leaders</span>
+            </button>
+            <button onclick="" style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:12px;padding:10px 12px;font-size:11px;font-weight:500;color:#15803d;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:16px;">📊</span><span>Risk Comparison</span>
+            </button>
+            <button onclick="" style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:12px;padding:10px 12px;font-size:11px;font-weight:500;color:#15803d;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;">
+                <span style="font-size:16px;">⚠️</span><span>Companies to Watch</span>
+            </button>
+        </div>
     </div>""", unsafe_allow_html=True)
 
+    # Streamlit buttons të fshehura për funksionalitet
     qa, qb = st.columns(2)
     with qa:
         if st.button("🏆 Best Investment", use_container_width=True, key="q1"):
@@ -265,6 +280,12 @@ with R:
             st.session_state.auto_q = "Which companies are the ESG sustainability leaders?"
         if st.button("⚠️ Companies to Watch", use_container_width=True, key="q4"):
             st.session_state.auto_q = "Which companies should investors watch carefully?"
+
+    st.markdown("""<style>
+    div[data-testid="column"] .stButton button {
+        display: none !important;
+    }
+    </style>""", unsafe_allow_html=True)
 
 
     if "messages" not in st.session_state:
