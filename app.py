@@ -45,42 +45,6 @@ st.markdown("""
 .stButton button{border-radius:25px !important;font-size:12px !important;font-weight:500 !important;border:1px solid #e2e8f0 !important;background:white !important;color:#334155 !important;padding:8px 14px !important;text-align:left !important;}
 .stButton button:hover{background:#f0fdf4 !important;border-color:#86efac !important;color:#059669 !important;}
 div[data-testid="column"]{padding:0 3px !important;}
-
-/* Quick Analysis card - titull + butona bashke */
-.qa-title-bar {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px 14px 0 0;
-    border-bottom: none;
-    padding: 14px 16px 10px 16px;
-    margin-top: 6px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #0f172a;
-}
-.qa-buttons-bar {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 0 0 14px 14px;
-    border-top: none;
-    padding: 0 10px 12px 10px;
-}
-.qa-buttons-bar .stButton button {
-    background: white !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 10px !important;
-    color: #334155 !important;
-    font-size: 12px !important;
-    font-weight: 500 !important;
-    padding: 10px 14px !important;
-    height: 44px !important;
-    text-align: left !important;
-}
-.qa-buttons-bar .stButton button:hover {
-    background: #f0fdf4 !important;
-    border-color: #86efac !important;
-    color: #059669 !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -272,8 +236,8 @@ with L:
 
 
 with R:
-    # ── AI Assistant header card ──────────────────────────────────
-    st.markdown(f"""<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px 16px 0 16px;margin-bottom:0px;">
+    # AI Assistant header
+    st.markdown(f"""<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px 16px 12px 16px;margin-bottom:6px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <div>
                 <div style="display:flex;align-items:center;gap:6px;">
@@ -284,27 +248,21 @@ with R:
             </div>
             <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;font-size:18px;">🤖</div>
         </div>
-        <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;color:#334155;margin-bottom:12px;">
+        <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;color:#334155;">
             Hello! I analyze <b>{total} S&P 500 companies</b> using real-time data from BigQuery. Ask me about risks, green scores, or investment recommendations!
         </div>
     </div>""", unsafe_allow_html=True)
 
-    # ── Input bar ─────────────────────────────────────────────────
+    # Input bar
     ci, cb = st.columns([5,1])
     with ci:
         user_input = st.text_input("", placeholder="Ask me anything...", label_visibility="collapsed", key="chat_input")
     with cb:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
-    # ── Quick Analysis — titull + butona BRENDA një kartë ─────────
-    # Titulli: kënde të rrumbullakosura sipër, pa border poshtë
-    st.markdown("""
-    <div class="qa-title-bar">Quick Analysis</div>
-    """, unsafe_allow_html=True)
-
-    # Butonat: kënde të rrumbullakosura poshtë, pa border sipër
-    with st.container():
-        st.markdown('<div class="qa-buttons-bar">', unsafe_allow_html=True)
+    # Quick Analysis — te gjitha brenda container(border=True)
+    with st.container(border=True):
+        st.markdown("**Quick Analysis**")
         qa, qb = st.columns(2, gap="small")
         with qa:
             if st.button("🏆  Best Investment", use_container_width=True, key="q1"):
@@ -316,9 +274,8 @@ with R:
                 st.session_state.auto_q = "Which companies are the ESG sustainability leaders?"
             if st.button("⚠️  Companies to Watch", use_container_width=True, key="q4"):
                 st.session_state.auto_q = "Which companies should investors watch carefully?"
-        st.markdown('</div>', unsafe_allow_html=True)
 
-    # ── Chat messages ─────────────────────────────────────────────
+    # Chat messages
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
