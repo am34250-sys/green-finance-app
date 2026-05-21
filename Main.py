@@ -412,9 +412,8 @@ with R:
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
-   # Pastro cache-in e vjeter AI
-    keys_to_del = [k for k in st.session_state if k.startswith("ai_")]
-    for k in keys_to_del:
+
+    for k in [k for k in st.session_state if k.startswith("ai_")]:
         del st.session_state[k]
     
     question = None
