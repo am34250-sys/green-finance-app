@@ -250,10 +250,20 @@ with R:
         if st.button("⚠️ Watch List",use_container_width=True,key="q4"):
             st.session_state.auto_q="Which companies should investors watch carefully?"
 
-    question = st.chat_input("Ask me anything...")
+    st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
-    if "auto_q" in st.session_state:
-        question=st.session_state.auto_q
+    ci, cb = st.columns([5,1])
+    with ci:
+        user_input = st.text_input("", placeholder="Ask me anything...", label_visibility="collapsed", key="chat_input")
+    with cb:
+        send = st.button("➤", use_container_width=True, key="send_btn")
+
+    question = None
+    if send and user_input:
+        question = user_input
+        st.session_state["chat_input"] = ""
+    elif "auto_q" in st.session_state:
+        question = st.session_state.auto_q
         del st.session_state.auto_q
 
     if question:
