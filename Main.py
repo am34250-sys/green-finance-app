@@ -14,7 +14,7 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 * { font-family: 'Inter', sans-serif !important; }
 .stApp { background: #f8fafc !important; }
-.block-container { padding: 16px 20px !important; max-width: 100% !important; }
+.block-container { padding: 10px 16px !important; max-width: 100% !important; }
 #MainMenu, footer, header, .stDeployButton { visibility: hidden; }
 section[data-testid="stSidebar"] { background: #0f172a !important; min-width: 180px !important; max-width: 180px !important; }
 section[data-testid="stSidebar"] * { color: #94a3b8 !important; }
@@ -91,18 +91,18 @@ def svg_spark(trend="up", seed=1):
     fill = "rgba(34,197,94,0.08)" if trend == "up" else "rgba(239,68,68,0.08)"
     pts_str = " ".join(f"{x:.1f},{y:.1f}" for x, y in zip(xs, ys))
     fill_pts = f"0,{h} " + pts_str + f" {w},{h}"
-    return f'<svg viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:36px;display:block;margin:0;padding:0;"><polygon points="{fill_pts}" fill="{fill}" stroke="none"/><polyline points="{pts_str}" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    return f'<svg viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:28px;display:block;margin:0;padding:0;"><polygon points="{fill_pts}" fill="{fill}" stroke="none"/><polyline points="{pts_str}" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
 def kpi(ico, ico_bg, lbl, val, val_color, trend_txt, trend_color, spark_trend, seed):
     spark = svg_spark(spark_trend, seed)
     return f"""<div style="background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
-  <div style="padding:12px 14px 8px;">
+  <div style="padding:8px 12px 6px;">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
       <div style="width:26px;height:26px;background:{ico_bg};border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;">{ico}</div>
       <span style="font-size:11px;color:#64748b;font-weight:500;">{lbl}</span>
     </div>
     <div style="display:flex;align-items:baseline;gap:8px;">
-      <span style="font-size:28px;font-weight:700;color:{val_color};line-height:1;">{val}</span>
+      <span style="font-size:24px;font-weight:700;color:{val_color};line-height:1;">{val}</span>
       <span style="font-size:10px;font-weight:500;color:{trend_color};">{trend_txt}</span>
     </div>
   </div>
@@ -140,7 +140,7 @@ with st.sidebar:
 
 h1, h2 = st.columns([3,1])
 with h1:
-    st.markdown("""<div style="margin-bottom:12px;">
+    st.markdown("""<div style="margin-bottom:8px;">
         <div style="font-size:18px;font-weight:700;color:#0f172a;">Welcome to Green Finance Intelligence! 👋</div>
         <div style="font-size:11px;color:#64748b;margin-top:1px;">Here's what's happening with your green finance portfolio today.</div>
     </div>""", unsafe_allow_html=True)
@@ -159,7 +159,7 @@ with k3:
 with k4:
     st.markdown(kpi("🌱","#fff7ed","Avg Green Score",avg_green,"#d97706","↑ Sustainability","#059669","up",4), unsafe_allow_html=True)
 
-st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
 L, R = st.columns([14,9], gap="medium")
 
@@ -182,7 +182,7 @@ with L:
         "ESG": df["esg_rating"],
         "Sector": df["sector"].apply(lambda x: x[:12]+"…" if len(x)>12 else x),
     })
-    st.dataframe(ddf, use_container_width=True, hide_index=True, height=300)
+    st.dataframe(ddf, use_container_width=True, hide_index=True, height=260)
 
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
@@ -195,7 +195,7 @@ with L:
     colors = ["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
     fig = go.Figure(go.Pie(labels=sd["Sector"], values=sd["Count"], hole=0.6,
         marker_colors=colors[:len(sd)], textinfo="percent", textfont_size=9))
-    fig.update_layout(height=160, margin=dict(t=0,b=0,l=0,r=120),
+    fig.update_layout(height=130, margin=dict(t=0,b=0,l=0,r=120),
         paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
         legend=dict(font=dict(size=9), orientation="v", x=1.02, y=0.5, xanchor="left"),
         annotations=[dict(text=f"<b>{total}</b>", x=0.35, y=0.5, font_size=14, showarrow=False)])
