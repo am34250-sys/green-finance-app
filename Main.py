@@ -106,7 +106,7 @@ def kpi(ico, ico_bg, lbl, val, val_color, trend_txt, trend_color, spark_trend, s
       <span style="font-size:10px;font-weight:500;color:{trend_color};">{trend_txt}</span>
     </div>
   </div>
-  <div style="margin:0;">{spark}</div>
+  <div>{spark}</div>
 </div>"""
 
 data = get_data()
@@ -116,7 +116,6 @@ high_risk = len([d for d in data if d["financial_risk_score"] >= 60])
 low_risk = len([d for d in data if d["financial_risk_score"] <= 20])
 avg_green = round(sum(d["green_score"] for d in data) / total, 1) if total else 0
 
-# SIDEBAR
 with st.sidebar:
     st.markdown("""<div style="padding:14px 10px 10px;">
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:16px;">
@@ -125,10 +124,8 @@ with st.sidebar:
         </div>
         <div style="font-size:8px;color:#334155;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">Navigation</div>
     </div>""", unsafe_allow_html=True)
-
     for item in ["📊 Dashboard","🏢 Companies","⚠️ Risk Analytics","🌱 ESG Scores","🔔 Alerts","📋 Reports"]:
         st.button(item, use_container_width=True, key=f"n_{item}")
-
     st.markdown("""<div style="margin:12px 8px 6px;">
         <div style="background:#1e293b;border-radius:8px;padding:10px;margin-bottom:6px;">
             <div style="font-size:8px;color:#475569;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">S&P 500</div>
@@ -141,7 +138,6 @@ with st.sidebar:
         </div>
     </div>""", unsafe_allow_html=True)
 
-# HEADER
 h1, h2 = st.columns([3,1])
 with h1:
     st.markdown("""<div style="margin-bottom:12px;">
@@ -153,7 +149,6 @@ with h2:
         <div class="pill"><div class="dot"></div>Live · {total} companies</div>
     </div>""", unsafe_allow_html=True)
 
-# KPI CARDS
 k1,k2,k3,k4 = st.columns(4)
 with k1:
     st.markdown(kpi("👥","#f0fdf4","Companies Tracked",total,"#059669","↑ Updated live","#059669","up",1), unsafe_allow_html=True)
@@ -166,7 +161,6 @@ with k4:
 
 st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
-# LAYOUT
 L, R = st.columns([14,9], gap="medium")
 
 with L:
@@ -192,12 +186,10 @@ with L:
 
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
-    # SECTOR CHART
     st.markdown("""<div class="card"><div class="ch">
         <span class="ct">Sector Breakdown</span>
         <span style="font-size:9px;color:#64748b;">Live</span>
     </div></div>""", unsafe_allow_html=True)
-
     sd = df["sector"].value_counts().reset_index()
     sd.columns = ["Sector","Count"]
     colors = ["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
@@ -209,7 +201,6 @@ with L:
         annotations=[dict(text=f"<b>{total}</b>", x=0.35, y=0.5, font_size=14, showarrow=False)])
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
 
-    # ALERTS
     st.markdown("""<div class="card"><div class="ch">
         <span class="ct">🔔 Recent Alerts</span>
         <span style="font-size:10px;color:#059669;font-weight:600;">View all →</span>
@@ -218,37 +209,28 @@ with L:
     hr2=[d for d in data if d["financial_risk_score"]>=60]
     lg2=[d for d in data if d["green_score"]<=20]
     bc2=max(data,key=lambda x:x["green_score"]) if data else None
-
     a1,a2,a3=st.columns(3)
     with a1:
         if hr2:
             c=hr2[0]
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #dc2626;">
                 <div class="aico" style="background:#fef2f2;">⚠️</div>
-                <div><div class="at">High Risk Alert</div>
-                <div class="ad">{c['symbol']} risk {c['financial_risk_score']}/100</div>
-                <div class="atm">Just now</div></div></div>""", unsafe_allow_html=True)
+                <div><div class="at">High Risk Alert</div><div class="ad">{c['symbol']} risk {c['financial_risk_score']}/100</div><div class="atm">Just now</div></div></div>""", unsafe_allow_html=True)
     with a2:
         if lg2:
             c=lg2[0]
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #f59e0b;">
                 <div class="aico" style="background:#fffbeb;">🏭</div>
-                <div><div class="at">Low ESG Score</div>
-                <div class="ad">{c['symbol']} {c['green_score']}/100</div>
-                <div class="atm">15m ago</div></div></div>""", unsafe_allow_html=True)
+                <div><div class="at">Low ESG Score</div><div class="ad">{c['symbol']} {c['green_score']}/100</div><div class="atm">15m ago</div></div></div>""", unsafe_allow_html=True)
         else:
             st.markdown("""<div class="alrt" style="border-left:3px solid #22c55e;">
                 <div class="aico" style="background:#f0fdf4;">✅</div>
-                <div><div class="at">ESG Healthy</div>
-                <div class="ad">All stable</div>
-                <div class="atm">Now</div></div></div>""", unsafe_allow_html=True)
+                <div><div class="at">ESG Healthy</div><div class="ad">All stable</div><div class="atm">Now</div></div></div>""", unsafe_allow_html=True)
     with a3:
         if bc2:
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #3b82f6;">
                 <div class="aico" style="background:#eff6ff;">🌿</div>
-                <div><div class="at">ESG Leader</div>
-                <div class="ad">{bc2['symbol']} {bc2['green_score']}/100</div>
-                <div class="atm">1h ago</div></div></div>""", unsafe_allow_html=True)
+                <div><div class="at">ESG Leader</div><div class="ad">{bc2['symbol']} {bc2['green_score']}/100</div><div class="atm">1h ago</div></div></div>""", unsafe_allow_html=True)
 
 with R:
     st.markdown("""<div class="ai-box"><div class="ai-h">
@@ -264,8 +246,7 @@ with R:
 
     st.markdown(f"""<div class="amsg">I analyze <b>{total} S&P 500 companies</b> using real-time BigQuery data.<br>
     Ask: Investment strategy · ESG leaders · Financial risks</div>
-    <div style="font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin:8px 0 5px;">Quick Analysis</div>
-    """, unsafe_allow_html=True)
+    <div style="font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin:8px 0 5px;">Quick Analysis</div>""", unsafe_allow_html=True)
 
     qa,qb=st.columns(2)
     with qa:
