@@ -40,22 +40,20 @@ section[data-testid="stSidebar"] .stButton:first-of-type button {
     background: #059669 !important; color: white !important;
 }
 
-.dot { width:6px;height:6px;background:#22c55e;border-radius:50%;animation:b 2s infinite;display:inline-block; }
+.dot{width:6px;height:6px;background:#22c55e;border-radius:50%;animation:b 2s infinite;display:inline-block;}
 @keyframes b{0%,100%{opacity:1}50%{opacity:0.2}}
 .pill{display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;}
 
-.kpi{background:white;border-radius:14px;padding:18px 20px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;}
-.kpi-left{}
-.kpi-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:10px;}
-.kpi-val{font-size:30px;font-weight:700;line-height:1;}
-.kpi-lbl{font-size:12px;color:#64748b;margin-top:3px;}
-.kpi-trend{font-size:11px;margin-top:8px;font-weight:500;}
+.kpi{background:white;border-radius:14px;padding:20px 22px;border:1px solid #e2e8f0;}
+.kpi-ico{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;}
+.kpi-val{font-size:36px;font-weight:700;line-height:1;}
+.kpi-lbl{font-size:13px;color:#64748b;margin-top:4px;}
+.kpi-trend{font-size:11px;margin-top:10px;font-weight:500;}
 .up{color:#059669;} .dn{color:#dc2626;}
-.kpi-right{width:110px;height:60px;flex-shrink:0;}
 
 .card{background:white;border-radius:14px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:16px;}
 .ch{padding:14px 18px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;}
-.ct{font-size:13px;font-weight:600;color:#0f172a;}
+.ct{font-size:14px;font-weight:600;color:#0f172a;}
 .rpill{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
 
 .ai-box{background:white;border-radius:14px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:16px;}
@@ -76,8 +74,6 @@ section[data-testid="stSidebar"] .stButton:first-of-type button {
 
 .stButton button{border-radius:8px !important;font-size:11px !important;font-weight:500 !important;border:1px solid #e2e8f0 !important;background:#f8fafc !important;color:#334155 !important;padding:6px 10px !important;}
 .stButton button:hover{background:#f0fdf4 !important;border-color:#86efac !important;color:#15803d !important;}
-
-div[data-testid="column"]{padding:0 6px !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -116,20 +112,16 @@ def ask_gemini(q, data):
     info = "".join([f"- {d['symbol']} ({d['name']}): Price=${d['price']:.2f}, Risk={d['financial_risk_score']}, Green={d['green_score']}, ESG={d['esg_rating']}\n" for d in data[:12]])
     return gemini_model.generate_content(f"Senior Green Finance AI Analyst.\nData:\n{info}\nQuestion: {q}\nMax 150 words.").text
 
-def make_spark(trend="up", seed=1):
+def make_spark(trend="up", seed=1, h=55):
     x = np.linspace(0, 4*np.pi, 24)
     y = np.sin(x + seed) + np.linspace(0, 1.5 if trend=="up" else -1.5, 24) * 0.5
     color = "#22c55e" if trend == "up" else "#ef4444"
     fill = "rgba(34,197,94,0.08)" if trend == "up" else "rgba(239,68,68,0.08)"
-    fig = go.Figure(go.Scatter(
-        x=list(range(24)), y=y.tolist(), mode="lines",
-        line=dict(color=color, width=2), fill="tozeroy", fillcolor=fill
-    ))
-    fig.update_layout(
-        margin=dict(t=0,b=0,l=0,r=0), height=60,
+    fig = go.Figure(go.Scatter(x=list(range(24)), y=y.tolist(), mode="lines",
+        line=dict(color=color, width=2), fill="tozeroy", fillcolor=fill))
+    fig.update_layout(margin=dict(t=0,b=0,l=0,r=0), height=h,
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(visible=False), yaxis=dict(visible=False)
-    )
+        xaxis=dict(visible=False), yaxis=dict(visible=False))
     return fig
 
 data = get_data()
@@ -190,7 +182,7 @@ with h2:
         <div class="pill"><div class="dot"></div>Live · {total} companies</div>
     </div>""", unsafe_allow_html=True)
 
-# KPI CARDS — sparkline brenda card
+# KPI CARDS — numra të mëdhenj + sparkline poshtë brenda card
 k1,k2,k3,k4 = st.columns(4)
 
 kpi_cfg = [
@@ -202,20 +194,21 @@ kpi_cfg = [
 
 for col, bg, ico, val, color, lbl, tc, tt, td, seed in kpi_cfg:
     with col:
-        c1, c2 = st.columns([3,2])
-        with c1:
-            st.markdown(f"""
-            <div style="background:white;border-radius:14px;padding:18px 16px;border:1px solid #e2e8f0;height:130px;">
-                <div style="width:38px;height:38px;background:{bg};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:8px;">{ico}</div>
-                <div style="font-size:28px;font-weight:700;color:{color};line-height:1;">{val}</div>
-                <div style="font-size:11px;color:#64748b;margin-top:3px;">{lbl}</div>
-                <div style="font-size:10px;margin-top:6px;font-weight:500;" class="{tc}">{tt}</div>
-            </div>""", unsafe_allow_html=True)
-        with c2:
-            st.markdown('<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;height:130px;padding:8px;display:flex;align-items:center;">', unsafe_allow_html=True)
-            st.plotly_chart(make_spark(td, seed), use_container_width=True,
-                          config={"displayModeBar":False}, key=f"sp_{seed}")
-            st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="kpi">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+                <div>
+                    <div class="kpi-ico" style="background:{bg};">{ico}</div>
+                    <div class="kpi-val" style="color:{color};">{val}</div>
+                    <div class="kpi-lbl">{lbl}</div>
+                    <div class="kpi-trend {'up' if tc=='up' else 'dn'}">{tt}</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        # Sparkline direkt pas card — pa hapësirë bosh
+        st.plotly_chart(make_spark(td, seed, 45), use_container_width=True,
+                       config={"displayModeBar":False}, key=f"sp_{seed}")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -241,7 +234,7 @@ with L:
         "ESG": df["esg_rating"],
         "Sector": df["sector"].apply(lambda x: x[:13]+"…" if len(x)>13 else x),
     })
-    st.dataframe(ddf, use_container_width=True, hide_index=True, height=400)
+    st.dataframe(ddf, use_container_width=True, hide_index=True, height=420)
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""<div class="card"><div class="ch">
@@ -340,16 +333,12 @@ with R:
     sd=df["sector"].value_counts().reset_index()
     sd.columns=["Sector","Count"]
     colors=["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
-    fig=go.Figure(go.Pie(
-        labels=sd["Sector"],values=sd["Count"],hole=0.6,
-        marker_colors=colors[:len(sd)],textinfo="percent",textfont_size=10,
-    ))
-    fig.update_layout(
-        height=200,margin=dict(t=0,b=0,l=0,r=100),
+    fig=go.Figure(go.Pie(labels=sd["Sector"],values=sd["Count"],hole=0.6,
+        marker_colors=colors[:len(sd)],textinfo="percent",textfont_size=10))
+    fig.update_layout(height=200,margin=dict(t=0,b=0,l=0,r=100),
         paper_bgcolor="white",plot_bgcolor="white",showlegend=True,
         legend=dict(font=dict(size=10),orientation="v",x=1.02,y=0.5,xanchor="left"),
-        annotations=[dict(text=f"<b>{total}</b><br>Total",x=0.38,y=0.5,font_size=12,showarrow=False)]
-    )
+        annotations=[dict(text=f"<b>{total}</b><br>Total",x=0.38,y=0.5,font_size=12,showarrow=False)])
     st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
 
 st.markdown("""
