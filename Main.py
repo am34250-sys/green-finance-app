@@ -83,7 +83,7 @@ def init_clients():
             st.error("GEMINI_KEY mungon ne Streamlit Secrets.")
             st.stop()
         genai.configure(api_key=GEMINI_KEY)
-        gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+        gemini_model = genai.GenerativeModel("gemini-2.0-flash")
     except Exception as e:
         st.error(f"Gemini inicializimi deshtoi: {e}")
         st.stop()
