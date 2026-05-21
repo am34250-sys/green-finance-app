@@ -5,6 +5,7 @@ import google.generativeai as genai
 import pandas as pd
 import json
 import plotly.graph_objects as go
+import numpy as np
 
 st.set_page_config(
     page_title="Green Finance Intelligence",
@@ -39,61 +40,44 @@ section[data-testid="stSidebar"] .stButton:first-of-type button {
     background: #059669 !important; color: white !important;
 }
 
-.kpi {
-    background: white; border-radius: 14px;
-    padding: 18px 20px; border: 1px solid #e2e8f0;
-}
-.kpi-val { font-size: 28px; font-weight: 700; line-height: 1; }
-.kpi-lbl { font-size: 12px; color: #64748b; margin-top: 4px; }
-.kpi-trend { font-size: 11px; margin-top: 10px; font-weight: 500; }
-.up { color: #059669; } .dn { color: #dc2626; }
+.dot { width:6px;height:6px;background:#22c55e;border-radius:50%;animation:b 2s infinite;display:inline-block; }
+@keyframes b{0%,100%{opacity:1}50%{opacity:0.2}}
+.pill{display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;}
 
-.card {
-    background: white; border-radius: 14px;
-    border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 16px;
-}
-.ch { padding: 14px 18px; border-bottom: 1px solid #f1f5f9;
-    display: flex; align-items: center; justify-content: space-between; }
-.ct { font-size: 13px; font-weight: 600; color: #0f172a; }
-.pill { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d;
-    padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 600;
-    display: inline-flex; align-items: center; gap: 4px; }
-.dot { width: 5px; height: 5px; background: #22c55e; border-radius: 50%;
-    animation: b 2s infinite; display: inline-block; }
-@keyframes b { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.kpi{background:white;border-radius:14px;padding:18px 20px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;}
+.kpi-left{}
+.kpi-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:10px;}
+.kpi-val{font-size:30px;font-weight:700;line-height:1;}
+.kpi-lbl{font-size:12px;color:#64748b;margin-top:3px;}
+.kpi-trend{font-size:11px;margin-top:8px;font-weight:500;}
+.up{color:#059669;} .dn{color:#dc2626;}
+.kpi-right{width:110px;height:60px;flex-shrink:0;}
 
-.ai-box { background: white; border-radius: 14px;
-    border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 16px; }
-.ai-h { padding: 14px 18px; border-bottom: 1px solid #f1f5f9;
-    display: flex; align-items: center; justify-content: space-between; }
-.ai-ico { width: 34px; height: 34px; border-radius: 10px;
-    background: linear-gradient(135deg,#059669,#10b981);
-    display: flex; align-items: center; justify-content: center; font-size: 16px; }
-.ai-n { font-size: 13px; font-weight: 600; color: #0f172a; }
-.ai-s { font-size: 10px; color: #94a3b8; }
-.beta { background: #059669; color: white; padding: 2px 7px;
-    border-radius: 20px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
-.ai-b { padding: 14px 18px; }
-.amsg { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px;
-    padding: 10px 12px; font-size: 12px; line-height: 1.6; color: #334155; margin-bottom: 6px; }
-.umsg { background: linear-gradient(135deg,#059669,#10b981); color: white;
-    border-radius: 10px; padding: 10px 12px; font-size: 12px;
-    margin-bottom: 6px; margin-left: 20%; line-height: 1.5; }
+.card{background:white;border-radius:14px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:16px;}
+.ch{padding:14px 18px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;}
+.ct{font-size:13px;font-weight:600;color:#0f172a;}
+.rpill{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
 
-.alrt { display: flex; gap: 10px; background: #f8fafc;
-    border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px; }
-.ai-ico2 { width: 28px; height: 28px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
-.at { font-size: 11px; font-weight: 600; color: #0f172a; }
-.ad { font-size: 10px; color: #64748b; line-height: 1.4; margin-top: 2px; }
-.atm { font-size: 9px; color: #cbd5e1; margin-top: 4px; }
+.ai-box{background:white;border-radius:14px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:16px;}
+.ai-h{padding:14px 18px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;}
+.ai-ico{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.ai-n{font-size:13px;font-weight:600;color:#0f172a;}
+.ai-s{font-size:10px;color:#94a3b8;}
+.beta{background:#059669;color:white;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;text-transform:uppercase;}
+.ai-b{padding:14px 18px;}
+.amsg{background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;color:#334155;margin-bottom:6px;}
+.umsg{background:linear-gradient(135deg,#059669,#10b981);color:white;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:6px;margin-left:20%;line-height:1.5;}
 
-.stButton button {
-    border-radius: 8px !important; font-size: 11px !important;
-    font-weight: 500 !important; border: 1px solid #e2e8f0 !important;
-    background: #f8fafc !important; color: #334155 !important; padding: 6px 10px !important;
-}
-.stButton button:hover { background: #f0fdf4 !important; border-color: #86efac !important; color: #15803d !important; }
+.alrt{display:flex;gap:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:10px;}
+.aico{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.at{font-size:11px;font-weight:600;color:#0f172a;}
+.ad{font-size:10px;color:#64748b;line-height:1.4;margin-top:2px;}
+.atm{font-size:9px;color:#cbd5e1;margin-top:4px;}
+
+.stButton button{border-radius:8px !important;font-size:11px !important;font-weight:500 !important;border:1px solid #e2e8f0 !important;background:#f8fafc !important;color:#334155 !important;padding:6px 10px !important;}
+.stButton button:hover{background:#f0fdf4 !important;border-color:#86efac !important;color:#15803d !important;}
+
+div[data-testid="column"]{padding:0 6px !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -131,6 +115,22 @@ def get_data():
 def ask_gemini(q, data):
     info = "".join([f"- {d['symbol']} ({d['name']}): Price=${d['price']:.2f}, Risk={d['financial_risk_score']}, Green={d['green_score']}, ESG={d['esg_rating']}\n" for d in data[:12]])
     return gemini_model.generate_content(f"Senior Green Finance AI Analyst.\nData:\n{info}\nQuestion: {q}\nMax 150 words.").text
+
+def make_spark(trend="up", seed=1):
+    x = np.linspace(0, 4*np.pi, 24)
+    y = np.sin(x + seed) + np.linspace(0, 1.5 if trend=="up" else -1.5, 24) * 0.5
+    color = "#22c55e" if trend == "up" else "#ef4444"
+    fill = "rgba(34,197,94,0.08)" if trend == "up" else "rgba(239,68,68,0.08)"
+    fig = go.Figure(go.Scatter(
+        x=list(range(24)), y=y.tolist(), mode="lines",
+        line=dict(color=color, width=2), fill="tozeroy", fillcolor=fill
+    ))
+    fig.update_layout(
+        margin=dict(t=0,b=0,l=0,r=0), height=60,
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(visible=False), yaxis=dict(visible=False)
+    )
+    return fig
 
 data = get_data()
 df = pd.DataFrame(data)
@@ -181,7 +181,7 @@ h1, h2 = st.columns([3,1])
 with h1:
     st.markdown("""
     <div style="margin-bottom:20px;">
-        <div style="font-size:20px;font-weight:700;color:#0f172a;">Welcome to Green Finance Intelligence! 👋</div>
+        <div style="font-size:21px;font-weight:700;color:#0f172a;">Welcome to Green Finance Intelligence! 👋</div>
         <div style="font-size:12px;color:#64748b;margin-top:2px;">Here's what's happening with your green finance portfolio today.</div>
     </div>""", unsafe_allow_html=True)
 with h2:
@@ -190,36 +190,32 @@ with h2:
         <div class="pill"><div class="dot"></div>Live · {total} companies</div>
     </div>""", unsafe_allow_html=True)
 
-# KPI
+# KPI CARDS — sparkline brenda card
 k1,k2,k3,k4 = st.columns(4)
-with k1:
-    st.markdown(f"""<div class="kpi">
-        <div style="width:34px;height:34px;background:#f0fdf4;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px;">👥</div>
-        <div class="kpi-val" style="color:#059669;">{total}</div>
-        <div class="kpi-lbl">Companies Tracked</div>
-        <div class="kpi-trend up">↑ Updated live from BigQuery</div>
-    </div>""", unsafe_allow_html=True)
-with k2:
-    st.markdown(f"""<div class="kpi">
-        <div style="width:34px;height:34px;background:#fef2f2;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px;">⚠️</div>
-        <div class="kpi-val" style="color:#dc2626;">{high_risk}</div>
-        <div class="kpi-lbl">High Risk Companies</div>
-        <div class="kpi-trend dn">↓ Risk Score ≥ 60</div>
-    </div>""", unsafe_allow_html=True)
-with k3:
-    st.markdown(f"""<div class="kpi">
-        <div style="width:34px;height:34px;background:#eff6ff;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px;">✅</div>
-        <div class="kpi-val" style="color:#2563eb;">{low_risk}</div>
-        <div class="kpi-lbl">Low Risk Companies</div>
-        <div class="kpi-trend up">↑ Risk Score ≤ 20</div>
-    </div>""", unsafe_allow_html=True)
-with k4:
-    st.markdown(f"""<div class="kpi">
-        <div style="width:34px;height:34px;background:#fff7ed;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px;">🌱</div>
-        <div class="kpi-val" style="color:#d97706;">{avg_green}</div>
-        <div class="kpi-lbl">Avg Green Score</div>
-        <div class="kpi-trend up">↑ Sustainability Index</div>
-    </div>""", unsafe_allow_html=True)
+
+kpi_cfg = [
+    (k1,"#f0fdf4","👥",total,"#059669","Companies Tracked","up","↑ Updated live from BigQuery","up",1),
+    (k2,"#fef2f2","⚠️",high_risk,"#dc2626","High Risk Companies","dn","↓ Risk Score ≥ 60","down",2),
+    (k3,"#eff6ff","✅",low_risk,"#2563eb","Low Risk Companies","up","↑ Risk Score ≤ 20","up",3),
+    (k4,"#fff7ed","🌱",avg_green,"#d97706","Avg Green Score","up","↑ Sustainability Index","up",4),
+]
+
+for col, bg, ico, val, color, lbl, tc, tt, td, seed in kpi_cfg:
+    with col:
+        c1, c2 = st.columns([3,2])
+        with c1:
+            st.markdown(f"""
+            <div style="background:white;border-radius:14px;padding:18px 16px;border:1px solid #e2e8f0;height:130px;">
+                <div style="width:38px;height:38px;background:{bg};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:8px;">{ico}</div>
+                <div style="font-size:28px;font-weight:700;color:{color};line-height:1;">{val}</div>
+                <div style="font-size:11px;color:#64748b;margin-top:3px;">{lbl}</div>
+                <div style="font-size:10px;margin-top:6px;font-weight:500;" class="{tc}">{tt}</div>
+            </div>""", unsafe_allow_html=True)
+        with c2:
+            st.markdown('<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;height:130px;padding:8px;display:flex;align-items:center;">', unsafe_allow_html=True)
+            st.plotly_chart(make_spark(td, seed), use_container_width=True,
+                          config={"displayModeBar":False}, key=f"sp_{seed}")
+            st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -229,13 +225,11 @@ L, R = st.columns([13,9], gap="medium")
 with L:
     st.markdown("""<div class="card"><div class="ch">
         <div style="display:flex;align-items:center;gap:6px;"><div class="dot"></div><span class="ct">Live Company Scores</span></div>
-        <div class="pill"><div class="dot"></div>Auto-refresh · 60s</div>
+        <div class="rpill"><div class="dot"></div>Auto-refresh · 60s</div>
     </div></div>""", unsafe_allow_html=True)
 
-    def fr(s):
-        return f"🔴 {s}" if s>=60 else (f"🟡 {s}" if s>=40 else f"🟢 {s}")
-    def fg(s):
-        return f"🌿 {s}" if s>=70 else (f"🌱 {s}" if s>=40 else f"🏭 {s}")
+    def fr(s): return f"🔴 {s}" if s>=60 else (f"🟡 {s}" if s>=40 else f"🟢 {s}")
+    def fg(s): return f"🌿 {s}" if s>=70 else (f"🌱 {s}" if s>=40 else f"🏭 {s}")
 
     ddf = pd.DataFrame({
         "Symbol": df["symbol"],
@@ -264,7 +258,7 @@ with L:
         if hr2:
             c=hr2[0]
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #dc2626;">
-                <div class="ai-ico2" style="background:#fef2f2;">⚠️</div>
+                <div class="aico" style="background:#fef2f2;">⚠️</div>
                 <div><div class="at">High Risk Alert</div>
                 <div class="ad">{c['name']} risk {c['financial_risk_score']}/100</div>
                 <div class="atm">Just now</div></div></div>""", unsafe_allow_html=True)
@@ -272,20 +266,20 @@ with L:
         if lg2:
             c=lg2[0]
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #f59e0b;">
-                <div class="ai-ico2" style="background:#fffbeb;">🏭</div>
+                <div class="aico" style="background:#fffbeb;">🏭</div>
                 <div><div class="at">Low ESG Score</div>
                 <div class="ad">{c['name']} {c['green_score']}/100</div>
                 <div class="atm">15 min ago</div></div></div>""", unsafe_allow_html=True)
         else:
             st.markdown("""<div class="alrt" style="border-left:3px solid #22c55e;">
-                <div class="ai-ico2" style="background:#f0fdf4;">✅</div>
+                <div class="aico" style="background:#f0fdf4;">✅</div>
                 <div><div class="at">ESG Healthy</div>
                 <div class="ad">All stable</div>
                 <div class="atm">Now</div></div></div>""", unsafe_allow_html=True)
     with a3:
         if bc2:
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #3b82f6;">
-                <div class="ai-ico2" style="background:#eff6ff;">🌿</div>
+                <div class="aico" style="background:#eff6ff;">🌿</div>
                 <div><div class="at">ESG Leader</div>
                 <div class="ad">{bc2['name']} {bc2['green_score']}/100</div>
                 <div class="atm">1h ago</div></div></div>""", unsafe_allow_html=True)
@@ -352,8 +346,7 @@ with R:
     ))
     fig.update_layout(
         height=200,margin=dict(t=0,b=0,l=0,r=100),
-        paper_bgcolor="white",plot_bgcolor="white",
-        showlegend=True,
+        paper_bgcolor="white",plot_bgcolor="white",showlegend=True,
         legend=dict(font=dict(size=10),orientation="v",x=1.02,y=0.5,xanchor="left"),
         annotations=[dict(text=f"<b>{total}</b><br>Total",x=0.38,y=0.5,font_size=12,showarrow=False)]
     )
