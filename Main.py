@@ -77,9 +77,6 @@ def init_clients():
         else:
             st.error("GCP_CREDENTIALS mungon ne Streamlit Secrets.")
             st.stop()
-    except json.JSONDecodeError:
-        st.error("GCP_CREDENTIALS nuk eshte JSON i vlefshëm.")
-        st.stop()
     except Exception as e:
         st.error(f"BigQuery lidhja deshtoi: {e}")
         st.stop()
@@ -131,8 +128,8 @@ def ask_gemini(question, data_str):
     except Exception as e:
         err = str(e)
         if "429" in err:
-            return "⚠️ Quota e API u tejkalua. Provo perseri pas 1 minute."
-        return f"⚠️ Gabim: {err[:200]}"
+            return "Quota e API u tejkalua. Provo perseri pas 1 minute."
+        return f"Gabim: {err[:200]}"
 
 def svg_spark(trend="up", seed=1):
     pts, w, h = 24, 300, 28
@@ -217,9 +214,9 @@ def build_table_rows(rows):
         </tr>"""
     return html
 
-@st.dialog("🔔 All Alerts", width="large")
+@st.dialog("All Alerts", width="large")
 def show_all_alerts(hr2, lg2, data):
-    st.markdown("#### ⚠️ High Risk Companies")
+    st.markdown("#### High Risk Companies")
     if hr2:
         for d in hr2:
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #dc2626;">
@@ -229,7 +226,7 @@ def show_all_alerts(hr2, lg2, data):
                 </div></div>""", unsafe_allow_html=True)
     else:
         st.info("Asnje kompani me risk te larte.")
-    st.markdown("#### 🏭 Low ESG Companies")
+    st.markdown("#### Low ESG Companies")
     if lg2:
         for d in lg2:
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #f59e0b;">
@@ -239,7 +236,7 @@ def show_all_alerts(hr2, lg2, data):
                 </div></div>""", unsafe_allow_html=True)
     else:
         st.info("Asnje kompani me ESG te ulet.")
-    st.markdown("#### 🌿 Top 5 ESG Leaders")
+    st.markdown("#### Top 5 ESG Leaders")
     for d in sorted(data, key=lambda x: x["green_score"], reverse=True)[:5]:
         st.markdown(f"""<div class="alrt" style="border-left:3px solid #3b82f6;">
             <div class="aico" style="background:#eff6ff;">🌿</div>
@@ -247,7 +244,7 @@ def show_all_alerts(hr2, lg2, data):
             <div class="ad">{d['symbol']} · Green {d['green_score']}/100 · ESG {d['esg_rating']}</div>
             </div></div>""", unsafe_allow_html=True)
 
-@st.dialog("📊 All Companies", width="large")
+@st.dialog("All Companies", width="large")
 def show_all_companies(data):
     rows_html = build_table_rows(data)
     st.markdown(f"""
