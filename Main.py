@@ -253,9 +253,9 @@ with R:
     with cb:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
-    # Quick Analysis
+    # Quick Analysis brenda box
     st.markdown("""
-    <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;padding:14px 16px;margin-top:8px;">
+    <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;padding:14px 16px;margin-top:0px;">
         <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:10px;">Quick Analysis</div>
     </div>
     """, unsafe_allow_html=True)
