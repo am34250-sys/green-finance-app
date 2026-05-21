@@ -48,21 +48,6 @@ div[data-testid="column"]{padding:0 3px !important;}
 
 .sector-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f8fafc;}
 .sector-name{font-size:11px;color:#334155;display:flex;align-items:center;gap:6px;min-width:110px;}
-
-/* Custom company table */
-.co-table{width:100%;border-collapse:collapse;font-size:11px;}
-.co-table thead tr{background:#f8fafc;}
-.co-table th{padding:7px 8px;text-align:left;font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #e2e8f0;white-space:nowrap;}
-.co-table td{padding:6px 8px;border-bottom:1px solid #f8fafc;vertical-align:middle;white-space:nowrap;}
-.co-table tbody tr:hover{background:#f8fafc;}
-.sym-badge{font-weight:700;color:#0f172a;font-size:11px;}
-.co-name{color:#334155;font-size:10px;}
-.chg-pos{color:#059669;font-weight:600;}
-.chg-neg{color:#dc2626;font-weight:600;}
-.risk-r{background:#fef2f2;color:#dc2626;border-radius:20px;padding:2px 7px;font-size:9px;font-weight:700;}
-.risk-y{background:#fffbeb;color:#d97706;border-radius:20px;padding:2px 7px;font-size:9px;font-weight:700;}
-.risk-g{background:#f0fdf4;color:#059669;border-radius:20px;padding:2px 7px;font-size:9px;font-weight:700;}
-.esg-badge{background:#eff6ff;color:#3b82f6;border-radius:4px;padding:2px 5px;font-size:9px;font-weight:700;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -153,17 +138,6 @@ def svg_spark_small(trend="up", seed=1):
     ps = " ".join(f"{x:.1f},{y:.1f}" for x,y in zip(xs,ys))
     return f'<svg viewBox="0 0 {w} {h}" style="width:80px;height:22px;display:inline-block;"><polyline points="{ps}" fill="none" stroke="{color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
-def svg_spark_table(trend="up", seed=1):
-    """Compact sparkline for inline table cells"""
-    pts, w, h = 10, 72, 20
-    xs = [i * w / (pts-1) for i in range(pts)]
-    ys_raw = [math.sin(i*0.9 + seed*0.6)*0.5 + (i/pts*1.4 if trend=="up" else -i/pts*1.4 if trend=="down" else math.sin(i*0.4)*0.4) for i in range(pts)]
-    mn, mx = min(ys_raw), max(ys_raw)
-    ys = [h-2-(y-mn)/(mx-mn+0.001)*(h-4) for y in ys_raw]
-    color = "#22c55e" if trend=="up" else ("#ef4444" if trend=="down" else "#94a3b8")
-    ps = " ".join(f"{x:.1f},{y:.1f}" for x,y in zip(xs,ys))
-    return f'<svg viewBox="0 0 {w} {h}" style="width:72px;height:20px;display:block;"><polyline points="{ps}" fill="none" stroke="{color}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-
 def kpi(ico, ico_bg, lbl, val, val_color, trend_txt, trend_color, td, seed):
     return f"""<div style="background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
   <div style="padding:10px 12px 6px;">
@@ -179,60 +153,6 @@ def kpi(ico, ico_bg, lbl, val, val_color, trend_txt, trend_color, td, seed):
   {svg_spark(td, seed)}
 </div>"""
 
-def build_company_table(rows, max_height="320px"):
-    """Build a custom HTML table with inline sparklines."""
-    header = """
-    <div style="overflow-x:auto;overflow-y:auto;max-height:{mh};border-radius:10px;border:1px solid #e2e8f0;">
-    <table class="co-table">
-    <thead><tr>
-      <th>Symbol</th><th>Company</th><th>Price</th><th>Change</th>
-      <th>Risk Score</th><th>Green Score</th><th>ESG</th><th>Sector</th><th>Trend</th>
-    </tr></thead><tbody>
-    """.replace("{mh}", max_height)
-
-    body = ""
-    for i, d in enumerate(rows):
-        chg = d["change_percent"]
-        risk = d["financial_risk_score"]
-        green = d["green_score"]
-        trend = "up" if chg >= 0 else "down"
-
-        # Risk badge
-        if risk >= 60:
-            rb = f'<span class="risk-r">🔴 {risk}</span>'
-        elif risk >= 40:
-            rb = f'<span class="risk-y">🟡 {risk}</span>'
-        else:
-            rb = f'<span class="risk-g">🟢 {risk}</span>'
-
-        # Green badge
-        if green >= 70:
-            gb = f'<span style="color:#059669;font-weight:600;font-size:10px;">🌿 {green}</span>'
-        elif green >= 40:
-            gb = f'<span style="color:#d97706;font-weight:600;font-size:10px;">🌱 {green}</span>'
-        else:
-            gb = f'<span style="color:#dc2626;font-weight:600;font-size:10px;">🏭 {green}</span>'
-
-        chg_cls = "chg-pos" if chg >= 0 else "chg-neg"
-        chg_str = f"+{chg:.2f}%" if chg >= 0 else f"{chg:.2f}%"
-        co_name = d["name"][:22] + "…" if len(d["name"]) > 22 else d["name"]
-        sector = d["sector"][:14] + "…" if len(d["sector"]) > 14 else d["sector"]
-        spark = svg_spark_table(trend, seed=i+1)
-
-        body += f"""<tr>
-          <td><span class="sym-badge">{d['symbol']}</span></td>
-          <td><span class="co-name">{co_name}</span></td>
-          <td style="font-weight:600;color:#0f172a;font-size:11px;">${d['price']:.2f}</td>
-          <td><span class="{chg_cls}">{chg_str}</span></td>
-          <td>{rb}</td>
-          <td>{gb}</td>
-          <td><span class="esg-badge">{d['esg_rating']}</span></td>
-          <td style="font-size:10px;color:#64748b;">{sector}</td>
-          <td>{spark}</td>
-        </tr>"""
-
-    return header + body + "</tbody></table></div>"
-
 SECTOR_ICONS = {
     "Technology": "💻", "Chemicals": "🧪", "Utilities": "⚡",
     "Health Care": "❤️", "Semiconductors": "🔬", "Building": "🏗️",
@@ -242,7 +162,7 @@ SECTOR_ICONS = {
     "Life Sciences": "🔭", "Consumer": "🛍️", "Materials": "🪨",
 }
 
-# ── MODALS ────────────────────────────────────────────────────────────────────
+# ── MODAL — duhet te jete ne nivel te larte, jashte cdo `with` blloku ────────
 @st.dialog("🔔 All Alerts", width="large")
 def show_all_alerts(hr2, lg2, data):
     st.markdown("#### ⚠️ High Risk Companies")
@@ -274,24 +194,6 @@ def show_all_alerts(hr2, lg2, data):
             <div><div class="at">{d['name']}</div>
             <div class="ad">{d['symbol']} · Green {d['green_score']}/100 · ESG {d['esg_rating']}</div>
             </div></div>""", unsafe_allow_html=True)
-
-@st.dialog("📊 All Companies", width="large")
-def show_all_companies(data):
-    st.markdown(f"Showing all **{len(data)}** tracked companies · sorted by Risk Score")
-    st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-    # Sort options
-    sort_by = st.selectbox("Sort by", ["Risk Score (High→Low)", "Risk Score (Low→High)", "Green Score (High→Low)", "Price (High→Low)", "Change %"], label_visibility="collapsed")
-    if sort_by == "Risk Score (High→Low)":
-        rows = sorted(data, key=lambda x: x["financial_risk_score"], reverse=True)
-    elif sort_by == "Risk Score (Low→High)":
-        rows = sorted(data, key=lambda x: x["financial_risk_score"])
-    elif sort_by == "Green Score (High→Low)":
-        rows = sorted(data, key=lambda x: x["green_score"], reverse=True)
-    elif sort_by == "Price (High→Low)":
-        rows = sorted(data, key=lambda x: x["price"], reverse=True)
-    else:
-        rows = sorted(data, key=lambda x: x["change_percent"], reverse=True)
-    st.markdown(build_company_table(rows, max_height="520px"), unsafe_allow_html=True)
 # ─────────────────────────────────────────────────────────────────────────────
 
 data = get_data()
@@ -329,54 +231,79 @@ st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 L, R = st.columns([14, 9], gap="medium")
 
 with L:
-    # ── Live Company Scores header with View all button ──────────────────────
-    lh1, lh2 = st.columns([1, 1])
-    with lh1:
-        st.markdown("""<div style="display:flex;align-items:center;gap:6px;padding:6px 0 4px;">
-            <div class="dot"></div>
-            <span style="font-size:12px;font-weight:700;color:#0f172a;">Live Company Scores</span>
-            <span class="rpill"><div class="dot"></div>Auto-refresh · 60s</span>
-        </div>""", unsafe_allow_html=True)
-    with lh2:
-        # Align button to the right
-        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-        bc1, bc2 = st.columns([1, 1])
-        with bc2:
-            if st.button("View all →", use_container_width=True, key="view_all_companies_btn"):
-                show_all_companies(data)
+    st.markdown("""<div class="card"><div class="ch">
+        <div style="display:flex;align-items:center;gap:5px;"><div class="dot"></div><span class="ct">Live Company Scores</span></div>
+        <div class="rpill"><div class="dot"></div>Auto-refresh · 60s</div>
+    </div></div>""", unsafe_allow_html=True)
 
-    # ── Custom HTML table with TREND sparklines ──────────────────────────────
-    preview_rows = data[:12]  # show first 12 rows in preview
-    st.markdown(build_company_table(preview_rows, max_height="310px"), unsafe_allow_html=True)
+    def fr(s): return f"🔴 {s}" if s>=60 else (f"🟡 {s}" if s>=40 else f"🟢 {s}")
+    def fg(s): return f"🌿 {s}" if s>=70 else (f"🌱 {s}" if s>=40 else f"🏭 {s}")
+
+    ddf = pd.DataFrame({
+        "Symbol": df["symbol"],
+        "Company": df["name"].apply(lambda x: x[:20]+"…" if len(x)>20 else x),
+        "Price": df["price"].apply(lambda x: f"${x:.2f}"),
+        "Change": df["change_percent"].apply(lambda x: f"+{x:.2f}%" if x>=0 else f"{x:.2f}%"),
+        "Risk": df["financial_risk_score"].apply(fr),
+        "Green": df["green_score"].apply(fg),
+        "ESG": df["esg_rating"],
+        "Sector": df["sector"].apply(lambda x: x[:13]+"…" if len(x)>13 else x),
+    })
+    st.dataframe(ddf, use_container_width=True, hide_index=True, height=320)
 
     st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
     sc, ac = st.columns([1,1], gap="small")
 
     with sc:
-        # Only Breakdown tab — Sector Trends removed
-        st.markdown("""<div class="card"><div class="ch">
-            <span class="ct">🥧 Sector Breakdown</span>
-        </div></div>""", unsafe_allow_html=True)
-        sd = df["sector"].value_counts().reset_index()
-        sd.columns = ["Sector","Count"]
-        colors = ["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
-        fig = go.Figure(go.Pie(labels=sd["Sector"], values=sd["Count"], hole=0.6,
-            marker_colors=colors[:len(sd)], textinfo="percent", textfont_size=8))
-        fig.update_layout(height=220, margin=dict(t=0,b=0,l=0,r=110),
-            paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
-            legend=dict(font=dict(size=11), orientation="v", x=1.02, y=0.5, xanchor="left"),
-            annotations=[dict(text=f"<b>{total}</b><br><span style='font-size:10px'>Total</span>", x=0.35, y=0.5, font_size=13, showarrow=False)])
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
+        tab1, tab2 = st.tabs(["🥧 Breakdown", "📈 Sector Trends"])
+        with tab1:
+            sd = df["sector"].value_counts().reset_index()
+            sd.columns = ["Sector","Count"]
+            colors = ["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
+            fig = go.Figure(go.Pie(labels=sd["Sector"], values=sd["Count"], hole=0.6,
+                marker_colors=colors[:len(sd)], textinfo="percent", textfont_size=8))
+            fig.update_layout(height=220, margin=dict(t=0,b=0,l=0,r=110),
+                paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
+                legend=dict(font=dict(size=11), orientation="v", x=1.02, y=0.5, xanchor="left"),
+                annotations=[dict(text=f"<b>{total}</b><br><span style='font-size:10px'>Total</span>", x=0.35, y=0.5, font_size=13, showarrow=False)])
+            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
+
+        with tab2:
+            sector_stats = df.groupby("sector").agg(
+                avg_risk=("financial_risk_score","mean"),
+                avg_green=("green_score","mean"),
+            ).reset_index()
+            st.markdown("""<div style="display:flex;justify-content:space-between;padding:4px 0 6px;border-bottom:1px solid #f1f5f9;">
+                <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;">Sector</span>
+                <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;">Trend</span>
+            </div>""", unsafe_allow_html=True)
+            for i, row in sector_stats.iterrows():
+                ico = SECTOR_ICONS.get(row["sector"], "📊")
+                if row["avg_green"] >= 70 and row["avg_risk"] < 40:
+                    trend = "up"
+                elif row["avg_risk"] >= 60 or row["avg_green"] < 40:
+                    trend = "down"
+                else:
+                    trend = "neutral"
+                spark = svg_spark_small(trend, seed=i+1)
+                st.markdown(f"""<div class="sector-row">
+                    <div class="sector-name"><span>{ico}</span><span>{row['sector']}</span></div>
+                    <div>{spark}</div>
+                </div>""", unsafe_allow_html=True)
 
     with ac:
-        st.markdown("""<div class="card"><div class="ch">
-            <span class="ct">🔔 Recent Alerts</span>
-        </div></div>""", unsafe_allow_html=True)
-
         hr2 = [d for d in data if d["financial_risk_score"] >= 60]
         lg2 = [d for d in data if d["green_score"] <= 20]
         bc2 = max(data, key=lambda x: x["green_score"]) if data else None
+
+        # Header me "View all" si link djathtas
+        a1, a2 = st.columns([3, 1])
+        with a1:
+            st.markdown("""<div style="padding:4px 0 6px;"><span class="ct">🔔 Recent Alerts</span></div>""", unsafe_allow_html=True)
+        with a2:
+            if st.button("View all →", key="view_all_btn", use_container_width=True):
+                show_all_alerts(hr2, lg2, data)
 
         if hr2:
             c = hr2[0]
@@ -404,9 +331,6 @@ with L:
                 <div><div class="at">ESG Leader — {bc2['name'][:18]}</div>
                 <div class="ad">{bc2['symbol']} · Green {bc2['green_score']}/100 · ESG {bc2['esg_rating']}</div>
                 <div class="atm">1h ago</div></div></div>""", unsafe_allow_html=True)
-
-        if st.button("📋 View all alerts →", use_container_width=True, key="view_all_btn"):
-            show_all_alerts(hr2, lg2, data)
 
 with R:
     st.markdown(f"""<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px 16px 12px 16px;margin-bottom:6px;">
