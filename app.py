@@ -27,6 +27,13 @@ st.markdown("""
 .ct{font-size:12px;font-weight:600;color:#0f172a;}
 .rpill{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:2px 6px;border-radius:20px;font-size:9px;font-weight:600;display:inline-flex;align-items:center;gap:3px;}
 
+.ai-box{background:white;border-radius:16px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:8px;}
+.ai-h{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;}
+.ai-robot{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.ai-n{font-size:13px;font-weight:700;color:#0f172a;}
+.ai-s{font-size:10px;color:#94a3b8;}
+.beta{background:#059669;color:white;padding:2px 7px;border-radius:20px;font-size:8px;font-weight:700;text-transform:uppercase;margin-left:5px;}
+.ai-body{padding:10px 14px;}
 .amsg{background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:9px 11px;font-size:11px;line-height:1.6;color:#334155;margin-bottom:6px;}
 .umsg{background:linear-gradient(135deg,#059669,#10b981);color:white;border-radius:10px;padding:9px 11px;font-size:11px;margin-bottom:6px;margin-left:10%;line-height:1.5;}
 
@@ -54,30 +61,13 @@ GCP_CREDENTIALS = st.secrets.get("GCP_CREDENTIALS", None)
 
 @st.cache_resource
 def init_clients():
-    try:
-        if GCP_CREDENTIALS:
-            creds_info = json.loads(GCP_CREDENTIALS) if isinstance(GCP_CREDENTIALS, str) else GCP_CREDENTIALS
-            creds = service_account.Credentials.from_service_account_info(creds_info)
-            bq = bigquery.Client(project=PROJECT_ID, credentials=creds)
-        else:
-            st.error("GCP_CREDENTIALS mungon ne Streamlit Secrets.")
-            st.stop()
-    except json.JSONDecodeError:
-        st.error("GCP_CREDENTIALS nuk eshte JSON i vlefshëm.")
-        st.stop()
-    except Exception as e:
-        st.error(f"BigQuery lidhja deshtoi: {e}")
-        st.stop()
-    try:
-        if not GEMINI_KEY:
-            st.error("GEMINI_KEY mungon ne Streamlit Secrets.")
-            st.stop()
-        genai.configure(api_key=GEMINI_KEY)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-    except Exception as e:
-        st.error(f"Gemini inicializimi deshtoi: {e}")
-        st.stop()
-    return bq, model
+    if GCP_CREDENTIALS:
+        creds = service_account.Credentials.from_service_account_info(json.loads(GCP_CREDENTIALS))
+        bq = bigquery.Client(project=PROJECT_ID, credentials=creds)
+    else:
+        bq = bigquery.Client(project=PROJECT_ID)
+    genai.configure(api_key=GEMINI_KEY)
+    return bq, genai.GenerativeModel("gemini-1.5-flash")
 
 bq_client, gemini_model = init_clients()
 
@@ -97,23 +87,8 @@ def get_data():
     return [dict(row) for row in bq_client.query(q).result()]
 
 def ask_gemini(q, data):
-    try:
-        info = "".join([
-            f"- {d['symbol']} ({d['name']}): Price=${d['price']:.2f}, "
-            f"Risk={d['financial_risk_score']}, Green={d['green_score']}, "
-            f"ESG={d['esg_rating']}\n"
-            for d in data[:10]
-        ])
-        prompt = (
-            "You are a Green Finance AI Analyst. "
-            "Answer in maximum 100 words. "
-            f"Company data:\n{info}\n"
-            f"Question: {q}"
-        )
-        response = gemini_model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"⚠️ Gabim: {str(e)[:200]}"
+    info = "".join([f"- {d['symbol']} ({d['name']}): Price=${d['price']:.2f}, Risk={d['financial_risk_score']}, Green={d['green_score']}, ESG={d['esg_rating']}\n" for d in data[:12]])
+    return gemini_model.generate_content(f"Senior Green Finance AI Analyst.\nData:\n{info}\nQuestion: {q}\nMax 120 words.").text
 
 def svg_spark(trend="up", seed=1):
     pts, w, h = 24, 300, 28
@@ -174,7 +149,7 @@ with k4:
 
 st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
-# LAYOUT
+# LAYOUT: tabela majtas, AI djathtas
 L, R = st.columns([14, 9], gap="medium")
 
 with L:
@@ -251,8 +226,7 @@ with L:
 
 
 with R:
-    # 1. AI Assistant header
-    st.markdown(f"""<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px 16px 12px 16px;margin-bottom:6px;">
+    st.markdown(f"""<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px 16px 0 16px;margin-bottom:0px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <div>
                 <div style="display:flex;align-items:center;gap:6px;">
@@ -261,42 +235,71 @@ with R:
                 </div>
                 <div style="font-size:10px;color:#94a3b8;margin-top:1px;">Powered by real-time BigQuery data</div>
             </div>
-            <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;font-size:18px;">🤖</div>
+            <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;font-size:18px;">🤖</div>
         </div>
-        <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;color:#334155;">
+        <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;color:#334155;margin-bottom:12px;">
             Hello! I analyze <b>{total} S&P 500 companies</b> using real-time data from BigQuery. Ask me about risks, green scores, or investment recommendations!
         </div>
     </div>""", unsafe_allow_html=True)
 
-    # 2. Quick Analysis — SIPER
-    with st.container(border=True):
-        st.markdown("**Quick Analysis**")
-        qa, qb = st.columns(2, gap="small")
-        with qa:
-            if st.button("🏆  Best Investment", use_container_width=True, key="q1"):
-                st.session_state.auto_q = "Which company is the best investment combining financial and ESG performance?"
-            if st.button("📊  Risk Comparison", use_container_width=True, key="q3"):
-                st.session_state.auto_q = "Compare highest and lowest risk companies"
-        with qb:
-            if st.button("🌍  ESG Leaders", use_container_width=True, key="q2"):
-                st.session_state.auto_q = "Which companies are the ESG sustainability leaders?"
-            if st.button("⚠️  Companies to Watch", use_container_width=True, key="q4"):
-                st.session_state.auto_q = "Which companies should investors watch carefully?"
+    # Input me form
+    with st.form(key="chat_form", clear_on_submit=True):
+        ci, cb = st.columns([5,1])
+        with ci:
+            user_input = st.text_input("", placeholder="Ask me anything...", label_visibility="collapsed")
+        with cb:
+            send = st.form_submit_button("➤", use_container_width=True)
 
-    # 3. Input bar
-    ci, cb = st.columns([5,1])
-    with ci:
-        user_input = st.text_input("", placeholder="Ask me anything...", label_visibility="collapsed", key="chat_input")
-    with cb:
-        send = st.button("➤", use_container_width=True, key="send_btn")
+    # Quick Analysis - box + buttons si një bllok
+    st.markdown("""
+    <style>
+    .qa-wrap .stButton button {
+        background: #f0fdf4 !important;
+        border: 1px solid #dcfce7 !important;
+        border-radius: 10px !important;
+        color: #15803d !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        padding: 10px 14px !important;
+        height: 44px !important;
+    }
+    .qa-wrap .stButton button:hover {
+        background: #dcfce7 !important;
+        border-color: #86efac !important;
+    }
+    .qa-wrap {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 14px;
+        margin-top: 6px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    # 4. Chat messages — POSHTE
+    st.markdown('<div class="qa-wrap"><div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:10px;">Quick Analysis</div>', unsafe_allow_html=True)
+
+    qa, qb = st.columns(2)
+    with qa:
+        if st.button("🏆  Best Investment", use_container_width=True, key="q1"):
+            st.session_state.auto_q = "Which company is the best investment combining financial and ESG performance?"
+        if st.button("📊  Risk Comparison", use_container_width=True, key="q3"):
+            st.session_state.auto_q = "Compare highest and lowest risk companies"
+    with qb:
+        if st.button("🌍  ESG Leaders", use_container_width=True, key="q2"):
+            st.session_state.auto_q = "Which companies are the ESG sustainability leaders?"
+        if st.button("⚠️  Companies to Watch", use_container_width=True, key="q4"):
+            st.session_state.auto_q = "Which companies should investors watch carefully?"
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
     question = None
-    if send and user_input:
-        question = user_input
+    if send and user_input.strip():
+        question = user_input.strip()
     elif "auto_q" in st.session_state:
         question = st.session_state.auto_q
         del st.session_state.auto_q
