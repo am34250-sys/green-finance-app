@@ -6,3 +6,4 @@ finnhub-python
 requests
 pandas
 plotly
+google-genai
