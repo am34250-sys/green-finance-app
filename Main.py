@@ -223,17 +223,7 @@ with L:
                 <div><div class="at">ESG Leader — {bc2['name'][:18]}</div>
                 <div class="ad">{bc2['symbol']} · Green score {bc2['green_score']}/100 · ESG {bc2['esg_rating']}</div>
                 <div class="atm">1h ago</div></div></div>""", unsafe_allow_html=True)
-        # Shto statistika poshtë
-        st.markdown(f"""
-        <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:8px;padding:8px 10px;margin-top:4px;">
-            <div style="font-size:9px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Portfolio Summary</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-                <div><div style="font-size:16px;font-weight:700;color:#059669;">{low_risk}</div><div style="font-size:9px;color:#64748b;">Safe Investments</div></div>
-                <div><div style="font-size:16px;font-weight:700;color:#dc2626;">{high_risk}</div><div style="font-size:9px;color:#64748b;">High Risk</div></div>
-                <div><div style="font-size:16px;font-weight:700;color:#d97706;">{avg_green}</div><div style="font-size:9px;color:#64748b;">Avg Green Score</div></div>
-                <div><div style="font-size:16px;font-weight:700;color:#2563eb;">{total}</div><div style="font-size:9px;color:#64748b;">Total Tracked</div></div>
-            </div>
-        </div>""", unsafe_allow_html=True)
+
 
 with R:
     # AI ASSISTANT — dizajni i ri
