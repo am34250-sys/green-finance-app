@@ -415,7 +415,7 @@ with R:
    # Pastro cache-in e vjeter AI
     keys_to_del = [k for k in st.session_state if k.startswith("ai_")]
     for k in keys_to_del:
-    del st.session_state[k]
+        del st.session_state[k]
     
     question = None
     if send and user_input:
