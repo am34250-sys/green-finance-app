@@ -110,8 +110,11 @@ def get_data():
     """
     return [dict(row) for row in bq_client.query(q).result()]
 
-@st.cache_data(ttl=300)
 def ask_gemini(question, data_str):
+    # Kontrollo cache ne session_state
+    cache_key = f"ai_{hash(question + data_str[:50])}"
+    if cache_key in st.session_state:
+        return st.session_state[cache_key]
     try:
         prompt = (
             "You are a Green Finance AI Analyst. "
@@ -120,11 +123,13 @@ def ask_gemini(question, data_str):
             f"Question: {question}"
         )
         response = gemini_model.generate_content(prompt)
-        return response.text
+        result = response.text
+        st.session_state[cache_key] = result  # ruaj ne cache
+        return result
     except Exception as e:
         err = str(e)
         if "429" in err:
-            return "⚠️ Kemi arritur limitin e API. Provo perseri pas 1 minute."
+            return "⚠️ Quota e API u tejkalua. Provo perseri pas 1 minute."
         return f"⚠️ Gabim: {err[:200]}"
 
 def svg_spark(trend="up", seed=1):
@@ -334,43 +339,17 @@ with L:
     sc, ac = st.columns([1,1], gap="small")
 
     with sc:
-        tab1, tab2 = st.tabs(["🥧 Breakdown", "📈 Sector Trends"])
-        with tab1:
-            sd = df["sector"].value_counts().reset_index()
-            sd.columns = ["Sector","Count"]
-            colors = ["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
-            fig = go.Figure(go.Pie(labels=sd["Sector"], values=sd["Count"], hole=0.6,
-                marker_colors=colors[:len(sd)], textinfo="percent", textfont_size=8))
-            fig.update_layout(height=220, margin=dict(t=0,b=0,l=0,r=110),
-                paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
-                legend=dict(font=dict(size=11), orientation="v", x=1.02, y=0.5, xanchor="left"),
-                annotations=[dict(text=f"<b>{total}</b><br><span style='font-size:10px'>Total</span>", x=0.35, y=0.5, font_size=13, showarrow=False)])
-            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
-
-        with tab2:
-            sector_stats = df.groupby("sector").agg(
-                avg_risk=("financial_risk_score","mean"),
-                avg_green=("green_score","mean"),
-            ).reset_index()
-            st.markdown("""<div style="display:flex;justify-content:space-between;padding:4px 0 6px;border-bottom:1px solid #f1f5f9;">
-                <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;">Sector</span>
-                <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;">Trend</span>
-            </div>""", unsafe_allow_html=True)
-            for i, row in sector_stats.iterrows():
-                ico = SECTOR_ICONS.get(row["sector"], "📊")
-                if row["avg_green"] >= 70 and row["avg_risk"] < 40:
-                    tr = "up"
-                elif row["avg_risk"] >= 60 or row["avg_green"] < 40:
-                    tr = "down"
-                else:
-                    tr = "neutral"
-                spark = trend_spark(tr, seed=i+1)
-                st.markdown(f"""<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f8fafc;">
-                    <div style="font-size:11px;color:#334155;display:flex;align-items:center;gap:6px;">
-                        <span>{ico}</span><span>{row['sector']}</span>
-                    </div>
-                    <div>{spark}</div>
-                </div>""", unsafe_allow_html=True)
+        st.markdown("""<div style="padding:4px 0 2px;"><span class="ct">Sector Breakdown</span></div>""", unsafe_allow_html=True)
+        sd = df["sector"].value_counts().reset_index()
+        sd.columns = ["Sector","Count"]
+        colors = ["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
+        fig = go.Figure(go.Pie(labels=sd["Sector"], values=sd["Count"], hole=0.6,
+            marker_colors=colors[:len(sd)], textinfo="percent", textfont_size=8))
+        fig.update_layout(height=220, margin=dict(t=0,b=0,l=0,r=110),
+            paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
+            legend=dict(font=dict(size=11), orientation="v", x=1.02, y=0.5, xanchor="left"),
+            annotations=[dict(text=f"<b>{total}</b><br><span style='font-size:10px'>Total</span>", x=0.35, y=0.5, font_size=13, showarrow=False)])
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
 
     with ac:
         hr2 = [d for d in data if d["financial_risk_score"] >= 60]
