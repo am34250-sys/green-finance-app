@@ -249,43 +249,45 @@ with R:
     with cb:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
-    # Quick Analysis me ngjyra
-    st.markdown("""<div style="background:white;border-radius:0 0 14px 14px;border:1px solid #e2e8f0;border-top:none;padding:10px 16px 14px 16px;margin-top:-8px;">
-        <div style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:10px;">Quick Analysis</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <button onclick="" style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:12px;padding:10px 12px;font-size:11px;font-weight:500;color:#15803d;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;">
-                <span style="font-size:16px;">🏆</span><span>Best Investment</span>
-            </button>
-            <button onclick="" style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:12px;padding:10px 12px;font-size:11px;font-weight:500;color:#15803d;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;">
-                <span style="font-size:16px;">🌍</span><span>ESG Leaders</span>
-            </button>
-            <button onclick="" style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:12px;padding:10px 12px;font-size:11px;font-weight:500;color:#15803d;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;">
-                <span style="font-size:16px;">📊</span><span>Risk Comparison</span>
-            </button>
-            <button onclick="" style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:12px;padding:10px 12px;font-size:11px;font-weight:500;color:#15803d;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;">
-                <span style="font-size:16px;">⚠️</span><span>Companies to Watch</span>
-            </button>
-        </div>
-    </div>""", unsafe_allow_html=True)
-
-    # Streamlit buttons të fshehura për funksionalitet
-    qa, qb = st.columns(2)
-    with qa:
-        if st.button("🏆 Best Investment", use_container_width=True, key="q1"):
-            st.session_state.auto_q = "Which company is the best investment combining financial and ESG performance?"
-        if st.button("📊 Risk Comparison", use_container_width=True, key="q3"):
-            st.session_state.auto_q = "Compare highest and lowest risk companies"
-    with qb:
-        if st.button("🌍 ESG Leaders", use_container_width=True, key="q2"):
-            st.session_state.auto_q = "Which companies are the ESG sustainability leaders?"
-        if st.button("⚠️ Companies to Watch", use_container_width=True, key="q4"):
-            st.session_state.auto_q = "Which companies should investors watch carefully?"
-
-    st.markdown("""<style>
-    div[data-testid="column"] .stButton button {
-        display: none !important;
+    # Quick Analysis - Streamlit buttons me stil gjelbër si imazhi
+    st.markdown("""
+    <style>
+    .qa-wrap .stButton button {
+        background: #f0fdf4 !important;
+        border: 1px solid #dcfce7 !important;
+        border-radius: 12px !important;
+        color: #15803d !important;
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        padding: 10px 12px !important;
+        height: 54px !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
     }
-    </style>""", unsafe_allow_html=True)
+    .qa-wrap .stButton button:hover {
+        background: #dcfce7 !important;
+        border-color: #86efac !important;
+    }
+    </style>
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-top:6px;">
+        <div style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:8px;">Quick Analysis</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with st.container():
+        st.markdown('<div class="qa-wrap">', unsafe_allow_html=True)
+        qa, qb = st.columns(2)
+        with qa:
+            if st.button("🏆  Best Investment", use_container_width=True, key="q1"):
+                st.session_state.auto_q = "Which company is the best investment combining financial and ESG performance?"
+            if st.button("📊  Risk Comparison", use_container_width=True, key="q3"):
+                st.session_state.auto_q = "Compare highest and lowest risk companies"
+        with qb:
+            if st.button("🌍  ESG Leaders", use_container_width=True, key="q2"):
+                st.session_state.auto_q = "Which companies are the ESG sustainability leaders?"
+            if st.button("⚠️  Companies to Watch", use_container_width=True, key="q4"):
+                st.session_state.auto_q = "Which companies should investors watch carefully?"
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
     if "messages" not in st.session_state:
