@@ -249,28 +249,29 @@ with R:
     with cb:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
-    # Quick Analysis - Streamlit buttons me stil gjelbër si imazhi
+    # Quick Analysis
     st.markdown("""
     <style>
     .qa-wrap .stButton button {
-        background: #f0fdf4 !important;
-        border: 1px solid #dcfce7 !important;
+        background: #eff6ff !important;
+        border: 1px solid #bfdbfe !important;
         border-radius: 12px !important;
-        color: #15803d !important;
-        font-size: 11px !important;
+        color: #1d4ed8 !important;
+        font-size: 12px !important;
         font-weight: 500 !important;
-        padding: 10px 12px !important;
-        height: 54px !important;
-        text-align: left !important;
-        justify-content: flex-start !important;
+        padding: 12px 14px !important;
+        height: 52px !important;
     }
     .qa-wrap .stButton button:hover {
-        background: #dcfce7 !important;
-        border-color: #86efac !important;
+        background: #dbeafe !important;
+        border-color: #93c5fd !important;
     }
     </style>
-    <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-top:6px;">
-        <div style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:8px;">Quick Analysis</div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin-top:6px;">
+        <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:12px;">Quick Analysis</div>
     </div>
     """, unsafe_allow_html=True)
 
