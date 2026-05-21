@@ -81,17 +81,17 @@ def ask_gemini(q, data):
     return gemini_model.generate_content(f"Senior Green Finance AI Analyst.\nData:\n{info}\nQuestion: {q}\nMax 120 words.").text
 
 def svg_spark(trend="up", seed=1):
-    pts = 20
-    w, h = 200, 36
+    pts = 24
+    w, h = 300, 36
     xs = [i * w / (pts-1) for i in range(pts)]
-    ys_raw = [math.sin(i*0.7 + seed) + (i/pts * 1.5 if trend=="up" else -i/pts * 1.5) for i in range(pts)]
+    ys_raw = [math.sin(i*0.6 + seed*0.5) * 0.6 + (i/pts * 2.0 if trend=="up" else -i/pts * 2.0) for i in range(pts)]
     mn, mx = min(ys_raw), max(ys_raw)
-    ys = [h - 2 - (y - mn)/(mx - mn + 0.001) * (h-4) for y in ys_raw]
+    ys = [h - 3 - (y - mn)/(mx - mn + 0.001) * (h-6) for y in ys_raw]
     color = "#22c55e" if trend == "up" else "#ef4444"
-    fill = "rgba(34,197,94,0.07)" if trend == "up" else "rgba(239,68,68,0.07)"
+    fill = "rgba(34,197,94,0.08)" if trend == "up" else "rgba(239,68,68,0.08)"
     pts_str = " ".join(f"{x:.1f},{y:.1f}" for x, y in zip(xs, ys))
     fill_pts = f"0,{h} " + pts_str + f" {w},{h}"
-    return f'<svg viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:36px;display:block;"><polygon points="{fill_pts}" fill="{fill}" stroke="none"/><polyline points="{pts_str}" fill="none" stroke="{color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    return f'<svg viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:36px;display:block;margin:0;padding:0;"><polygon points="{fill_pts}" fill="{fill}" stroke="none"/><polyline points="{pts_str}" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
 def kpi(ico, ico_bg, lbl, val, val_color, trend_txt, trend_color, spark_trend, seed):
     spark = svg_spark(spark_trend, seed)
