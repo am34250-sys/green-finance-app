@@ -1,8 +1,7 @@
 import streamlit as st
 from google.cloud import bigquery
 from google.oauth2 import service_account
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 import pandas as pd
 import json
 import plotly.graph_objects as go
@@ -83,13 +82,14 @@ def init_clients():
         if not GEMINI_KEY:
             st.error("GEMINI_KEY mungon ne Streamlit Secrets.")
             st.stop()
-        gemini_client = genai.Client(api_key=GEMINI_KEY)
+        genai.configure(api_key=GEMINI_KEY)
+        gemini_model = genai.GenerativeModel("gemini-1.5-flash")
     except Exception as e:
         st.error(f"Gemini inicializimi deshtoi: {e}")
         st.stop()
-    return bq, gemini_client
+    return bq, gemini_model
 
-bq_client, gemini_client = init_clients()
+bq_client, gemini_model = init_clients()
 
 @st.cache_data(ttl=60)
 def get_data():
@@ -117,10 +117,7 @@ def ask_gemini(question, data_str):
             f"Company data:\n{data_str}\n"
             f"Question: {question}"
         )
-        response = gemini_client.models.generate_content(
-            model="gemini-2.0-flash-lite",
-            contents=prompt
-        )
+        response = gemini_model.generate_content(prompt)
         result = response.text
         st.session_state[cache_key] = result
         return result
