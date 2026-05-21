@@ -1,7 +1,8 @@
 import streamlit as st
 from google.cloud import bigquery
 from google.oauth2 import service_account
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import pandas as pd
 import json
 import plotly.graph_objects as go
@@ -41,12 +42,12 @@ st.markdown("""
 }
 .stTextInput input::placeholder { color: rgba(255,255,255,0.8) !important; }
 .stTextInput input:focus { box-shadow: none !important; }
+.stTextInput label { display: none !important; }
 
 .stButton button{border-radius:25px !important;font-size:12px !important;font-weight:500 !important;border:1px solid #e2e8f0 !important;background:white !important;color:#334155 !important;padding:8px 14px !important;text-align:left !important;}
 .stButton button:hover{background:#f0fdf4 !important;border-color:#86efac !important;color:#059669 !important;}
 div[data-testid="column"]{padding:0 3px !important;}
 
-/* Tabela custom */
 .ctable{width:100%;border-collapse:collapse;font-size:12px;}
 .ctable th{font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;padding:7px 10px;border-bottom:1px solid #f1f5f9;text-align:left;letter-spacing:.04em;}
 .ctable td{padding:8px 10px;border-bottom:1px solid #f8fafc;color:#334155;vertical-align:middle;}
@@ -86,14 +87,13 @@ def init_clients():
         if not GEMINI_KEY:
             st.error("GEMINI_KEY mungon ne Streamlit Secrets.")
             st.stop()
-        genai.configure(api_key=GEMINI_KEY)
-        model = genai.GenerativeModel("gemini-2.0-flash-lite")
+        gemini_client = genai.Client(api_key=GEMINI_KEY)
     except Exception as e:
         st.error(f"Gemini inicializimi deshtoi: {e}")
         st.stop()
-    return bq, model
+    return bq, gemini_client
 
-bq_client, gemini_model = init_clients()
+bq_client, gemini_client = init_clients()
 
 @st.cache_data(ttl=60)
 def get_data():
@@ -111,7 +111,6 @@ def get_data():
     return [dict(row) for row in bq_client.query(q).result()]
 
 def ask_gemini(question, data_str):
-    # Kontrollo cache ne session_state
     cache_key = f"ai_{hash(question + data_str[:50])}"
     if cache_key in st.session_state:
         return st.session_state[cache_key]
@@ -122,9 +121,12 @@ def ask_gemini(question, data_str):
             f"Company data:\n{data_str}\n"
             f"Question: {question}"
         )
-        response = gemini_model.generate_content(prompt)
+        response = gemini_client.models.generate_content(
+            model="gemini-2.0-flash-lite",
+            contents=prompt
+        )
         result = response.text
-        st.session_state[cache_key] = result  # ruaj ne cache
+        st.session_state[cache_key] = result
         return result
     except Exception as e:
         err = str(e)
@@ -145,7 +147,6 @@ def svg_spark(trend="up", seed=1):
     return f'<svg viewBox="0 0 {w} {h}" style="width:100%;height:28px;display:block;"><polygon points="{fp}" fill="{fill}"/><polyline points="{ps}" fill="none" stroke="{color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
 def trend_spark(trend="up", seed=1):
-    """Sparkline per kolonen TREND ne tabele"""
     pts, w, h = 10, 70, 20
     xs = [i * w / (pts-1) for i in range(pts)]
     ys_raw = [math.sin(i*0.9 + seed*0.6)*0.4 + (i/pts*1.2 if trend=="up" else -i/pts*1.2 if trend=="down" else math.sin(i*0.4)*0.2) for i in range(pts)]
@@ -185,7 +186,6 @@ def build_table_rows(rows):
         chg = d["change_percent"]
         chg_cls = "chg-up" if chg >= 0 else "chg-dn"
         chg_str = f"+{chg:.2f}%" if chg >= 0 else f"{chg:.2f}%"
-
         risk = d["financial_risk_score"]
         if risk >= 60:
             risk_html = f'<span class="risk-red">● {risk}</span>'
@@ -196,24 +196,14 @@ def build_table_rows(rows):
         else:
             risk_html = f'<span class="risk-grn">● {risk}</span>'
             tr = "up"
-
         gs = d["green_score"]
         green_ico = "🌿" if gs >= 70 else ("🌱" if gs >= 40 else "🏭")
-
         esg = d["esg_rating"]
-        if esg and esg.startswith("A"):
-            esg_cls = "esg-a"
-        elif esg and esg.startswith("B"):
-            esg_cls = "esg-b"
-        else:
-            esg_cls = "esg-c"
-
+        esg_cls = "esg-a" if esg and esg.startswith("A") else ("esg-b" if esg and esg.startswith("B") else "esg-c")
         sec = d["sector"]
         sec_ico = SECTOR_ICONS.get(sec, "📊")
         sec_short = sec[:14]+"…" if len(sec)>14 else sec
-
         spark = trend_spark(tr, seed=i+1)
-
         html += f"""<tr>
             <td><span class="sym">{d['symbol']}</span></td>
             <td style="color:#475569">{d['name'][:22]}{"…" if len(d['name'])>22 else ""}</td>
@@ -227,7 +217,6 @@ def build_table_rows(rows):
         </tr>"""
     return html
 
-# ── MODAL ────────────────────────────────────────────────────────────────────
 @st.dialog("🔔 All Alerts", width="large")
 def show_all_alerts(hr2, lg2, data):
     st.markdown("#### ⚠️ High Risk Companies")
@@ -269,7 +258,6 @@ def show_all_companies(data):
       </tr></thead>
       <tbody>{rows_html}</tbody>
     </table>""", unsafe_allow_html=True)
-# ─────────────────────────────────────────────────────────────────────────────
 
 data = get_data()
 df = pd.DataFrame(data)
@@ -278,7 +266,6 @@ high_risk = len([d for d in data if d["financial_risk_score"] >= 60])
 low_risk = len([d for d in data if d["financial_risk_score"] <= 20])
 avg_green = round(sum(d["green_score"] for d in data) / total, 1) if total else 0
 
-# HEADER
 h1, h2 = st.columns([3,1])
 with h1:
     st.markdown("""<div style="margin-bottom:10px;">
@@ -290,7 +277,6 @@ with h2:
         <div class="pill"><div class="dot"></div>Live · {total} companies</div>
     </div>""", unsafe_allow_html=True)
 
-# KPI
 k1,k2,k3,k4 = st.columns(4)
 with k1:
     st.markdown(kpi("👥","#f0fdf4","Companies Tracked",total,"#059669","↑ Updated live","#059669","up",1), unsafe_allow_html=True)
@@ -306,7 +292,6 @@ st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 L, R = st.columns([14, 9], gap="medium")
 
 with L:
-    # Header me "View all" djathtas
     hc1, hc2, hc3 = st.columns([6, 3, 2])
     with hc1:
         st.markdown("""<div style="display:flex;align-items:center;gap:5px;padding:4px 0;">
@@ -320,9 +305,7 @@ with L:
         if st.button("View all →", key="view_all_companies", use_container_width=True):
             show_all_companies(data)
 
-    # Tabela HTML me TREND kolone — trego 10 rreshtat e pare
-    preview = data[:10]
-    rows_html = build_table_rows(preview)
+    rows_html = build_table_rows(data[:10])
     st.markdown(f"""
     <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
     <table class="ctable">
@@ -337,7 +320,6 @@ with L:
     st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
     sc, ac = st.columns([1,1], gap="small")
-
     with sc:
         st.markdown("""<div style="padding:4px 0 2px;"><span class="ct">Sector Breakdown</span></div>""", unsafe_allow_html=True)
         sd = df["sector"].value_counts().reset_index()
@@ -423,7 +405,8 @@ with R:
 
     ci, cb = st.columns([5,1])
     with ci:
-        user_input = st.text_input("", placeholder="Ask me anything...", label_visibility="collapsed", key="chat_input")
+        user_input = st.text_input("chat_input_label", placeholder="Ask me anything...",
+                                   label_visibility="collapsed", key="chat_input")
     with cb:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
