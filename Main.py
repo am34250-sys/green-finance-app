@@ -48,7 +48,6 @@ div[data-testid="column"]{padding:0 3px !important;}
 
 .sector-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f8fafc;}
 .sector-name{font-size:11px;color:#334155;display:flex;align-items:center;gap:6px;min-width:110px;}
-.sector-ico{font-size:13px;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -130,18 +129,12 @@ def svg_spark(trend="up", seed=1):
     return f'<svg viewBox="0 0 {w} {h}" style="width:100%;height:28px;display:block;"><polygon points="{fp}" fill="{fill}"/><polyline points="{ps}" fill="none" stroke="{color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
 def svg_spark_small(trend="up", seed=1):
-    """Sparkline i vogel per tabelen e sektoreve"""
     pts, w, h = 12, 80, 22
     xs = [i * w / (pts-1) for i in range(pts)]
     ys_raw = [math.sin(i*0.8 + seed*0.7)*0.5 + (i/pts*1.5 if trend=="up" else -i/pts*1.5 if trend=="down" else math.sin(i*0.5)*0.3) for i in range(pts)]
     mn, mx = min(ys_raw), max(ys_raw)
     ys = [h-2-(y-mn)/(mx-mn+0.001)*(h-4) for y in ys_raw]
-    if trend == "up":
-        color = "#22c55e"
-    elif trend == "down":
-        color = "#ef4444"
-    else:
-        color = "#94a3b8"
+    color = "#22c55e" if trend=="up" else ("#ef4444" if trend=="down" else "#94a3b8")
     ps = " ".join(f"{x:.1f},{y:.1f}" for x,y in zip(xs,ys))
     return f'<svg viewBox="0 0 {w} {h}" style="width:80px;height:22px;display:inline-block;"><polyline points="{ps}" fill="none" stroke="{color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
@@ -160,15 +153,48 @@ def kpi(ico, ico_bg, lbl, val, val_color, trend_txt, trend_color, td, seed):
   {svg_spark(td, seed)}
 </div>"""
 
-# Ikonat per sektoret
 SECTOR_ICONS = {
     "Technology": "💻", "Chemicals": "🧪", "Utilities": "⚡",
     "Health Care": "❤️", "Semiconductors": "🔬", "Building": "🏗️",
     "Insurance": "🛡️", "Media": "📺", "Automobiles": "🚗",
     "Real Estate": "🏢", "Biotechnology": "🧬", "Energy": "⚡",
     "Industrial": "⚙️", "Retail": "🛒", "Finance": "💰",
-    "Consumer": "🛍️", "Materials": "🪨", "Aerospace": "✈️",
+    "Life Sciences": "🔭", "Consumer": "🛍️", "Materials": "🪨",
 }
+
+# ── MODAL — duhet te jete ne nivel te larte, jashte cdo `with` blloku ────────
+@st.dialog("🔔 All Alerts", width="large")
+def show_all_alerts(hr2, lg2, data):
+    st.markdown("#### ⚠️ High Risk Companies")
+    if hr2:
+        for d in hr2:
+            st.markdown(f"""<div class="alrt" style="border-left:3px solid #dc2626;">
+                <div class="aico" style="background:#fef2f2;">⚠️</div>
+                <div><div class="at">{d['name']}</div>
+                <div class="ad">{d['symbol']} · Risk {d['financial_risk_score']}/100 · {d['sector']}</div>
+                </div></div>""", unsafe_allow_html=True)
+    else:
+        st.info("Asnje kompani me risk te larte.")
+
+    st.markdown("#### 🏭 Low ESG Companies")
+    if lg2:
+        for d in lg2:
+            st.markdown(f"""<div class="alrt" style="border-left:3px solid #f59e0b;">
+                <div class="aico" style="background:#fffbeb;">🏭</div>
+                <div><div class="at">{d['name']}</div>
+                <div class="ad">{d['symbol']} · Green {d['green_score']}/100 · ESG {d['esg_rating']}</div>
+                </div></div>""", unsafe_allow_html=True)
+    else:
+        st.info("Asnje kompani me ESG te ulet.")
+
+    st.markdown("#### 🌿 Top 5 ESG Leaders")
+    for d in sorted(data, key=lambda x: x["green_score"], reverse=True)[:5]:
+        st.markdown(f"""<div class="alrt" style="border-left:3px solid #3b82f6;">
+            <div class="aico" style="background:#eff6ff;">🌿</div>
+            <div><div class="at">{d['name']}</div>
+            <div class="ad">{d['symbol']} · Green {d['green_score']}/100 · ESG {d['esg_rating']}</div>
+            </div></div>""", unsafe_allow_html=True)
+# ─────────────────────────────────────────────────────────────────────────────
 
 data = get_data()
 df = pd.DataFrame(data)
@@ -202,7 +228,6 @@ with k4:
 
 st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
-# LAYOUT
 L, R = st.columns([14, 9], gap="medium")
 
 with L:
@@ -231,9 +256,7 @@ with L:
     sc, ac = st.columns([1,1], gap="small")
 
     with sc:
-        # Tabs: Pie chart | Sector Trends
         tab1, tab2 = st.tabs(["🥧 Breakdown", "📈 Sector Trends"])
-
         with tab1:
             sd = df["sector"].value_counts().reset_index()
             sd.columns = ["Sector","Count"]
@@ -247,39 +270,25 @@ with L:
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
 
         with tab2:
-            # Llogarit trend per cdo sektor bazuar ne avg risk dhe avg green score
             sector_stats = df.groupby("sector").agg(
                 avg_risk=("financial_risk_score","mean"),
                 avg_green=("green_score","mean"),
-                count=("symbol","count")
             ).reset_index()
-
-            # Header
             st.markdown("""<div style="display:flex;justify-content:space-between;padding:4px 0 6px;border-bottom:1px solid #f1f5f9;">
                 <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;">Sector</span>
                 <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;">Trend</span>
             </div>""", unsafe_allow_html=True)
-
             for i, row in sector_stats.iterrows():
-                sector = row["sector"]
-                avg_risk = row["avg_risk"]
-                avg_green = row["avg_green"]
-                ico = SECTOR_ICONS.get(sector, "📊")
-
-                # Trend: green score te larte + risk te ulet = up, otherwise down/neutral
-                if avg_green >= 70 and avg_risk < 40:
+                ico = SECTOR_ICONS.get(row["sector"], "📊")
+                if row["avg_green"] >= 70 and row["avg_risk"] < 40:
                     trend = "up"
-                elif avg_risk >= 60 or avg_green < 40:
+                elif row["avg_risk"] >= 60 or row["avg_green"] < 40:
                     trend = "down"
                 else:
                     trend = "neutral"
-
                 spark = svg_spark_small(trend, seed=i+1)
                 st.markdown(f"""<div class="sector-row">
-                    <div class="sector-name">
-                        <span class="sector-ico">{ico}</span>
-                        <span>{sector}</span>
-                    </div>
+                    <div class="sector-name"><span>{ico}</span><span>{row['sector']}</span></div>
                     <div>{spark}</div>
                 </div>""", unsafe_allow_html=True)
 
@@ -319,36 +328,9 @@ with L:
                 <div class="ad">{bc2['symbol']} · Green {bc2['green_score']}/100 · ESG {bc2['esg_rating']}</div>
                 <div class="atm">1h ago</div></div></div>""", unsafe_allow_html=True)
 
-        with st.expander("📋 View all alerts →"):
-            st.markdown("**⚠️ High Risk Companies**")
-            if hr2:
-                for d in hr2:
-                    st.markdown(f"""<div class="alrt" style="border-left:3px solid #dc2626;">
-                        <div class="aico" style="background:#fef2f2;">⚠️</div>
-                        <div><div class="at">{d['name'][:22]}</div>
-                        <div class="ad">{d['symbol']} · Risk {d['financial_risk_score']}/100 · {d['sector'][:16]}</div>
-                        </div></div>""", unsafe_allow_html=True)
-            else:
-                st.markdown("<div class='ad'>Asnje kompani me risk te larte.</div>", unsafe_allow_html=True)
-
-            st.markdown("**🏭 Low ESG Companies**")
-            if lg2:
-                for d in lg2:
-                    st.markdown(f"""<div class="alrt" style="border-left:3px solid #f59e0b;">
-                        <div class="aico" style="background:#fffbeb;">🏭</div>
-                        <div><div class="at">{d['name'][:22]}</div>
-                        <div class="ad">{d['symbol']} · Green {d['green_score']}/100 · ESG {d['esg_rating']}</div>
-                        </div></div>""", unsafe_allow_html=True)
-            else:
-                st.markdown("<div class='ad'>Asnje kompani me ESG te ulet.</div>", unsafe_allow_html=True)
-
-            st.markdown("**🌿 Top 5 ESG Leaders**")
-            for d in sorted(data, key=lambda x: x["green_score"], reverse=True)[:5]:
-                st.markdown(f"""<div class="alrt" style="border-left:3px solid #3b82f6;">
-                    <div class="aico" style="background:#eff6ff;">🌿</div>
-                    <div><div class="at">{d['name'][:22]}</div>
-                    <div class="ad">{d['symbol']} · Green {d['green_score']}/100 · ESG {d['esg_rating']}</div>
-                    </div></div>""", unsafe_allow_html=True)
+        # Butoni qe hap modal-in
+        if st.button("📋 View all alerts →", use_container_width=True, key="view_all_btn"):
+            show_all_alerts(hr2, lg2, data)
 
 with R:
     st.markdown(f"""<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px 16px 12px 16px;margin-bottom:6px;">
