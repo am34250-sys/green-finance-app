@@ -226,11 +226,7 @@ with L:
 
 
 with R:
-    # AI BOX i plotë si HTML
-    st.markdown(f"""
-    <div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px;margin-bottom:8px;">
-
-        <!-- Header -->
+    st.markdown(f"""<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px;margin-bottom:8px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <div>
                 <div style="display:flex;align-items:center;gap:6px;">
@@ -241,17 +237,11 @@ with R:
             </div>
             <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;font-size:18px;">🤖</div>
         </div>
-
-        <!-- Intro message -->
         <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;color:#334155;margin-bottom:12px;">
             Hello! I analyze <b>{total} S&P 500 companies</b> using real-time data from BigQuery. Ask me about risks, green scores, or investment recommendations!
         </div>
-
-        <!-- Quick Analysis -->
         <div style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:8px;">Quick Analysis</div>
-
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
