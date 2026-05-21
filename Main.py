@@ -161,7 +161,7 @@ with L:
         "ESG": df["esg_rating"],
         "Sector": df["sector"].apply(lambda x: x[:12]+"…" if len(x)>12 else x),
     })
-    st.dataframe(ddf, use_container_width=True, hide_index=True, height=240)
+    st.dataframe(ddf, use_container_width=True, hide_index=True, height=320)
 
     st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
@@ -177,10 +177,10 @@ with L:
         colors = ["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
         fig = go.Figure(go.Pie(labels=sd["Sector"], values=sd["Count"], hole=0.6,
             marker_colors=colors[:len(sd)], textinfo="percent", textfont_size=8))
-        fig.update_layout(height=140, margin=dict(t=0,b=0,l=0,r=90),
+        fig.update_layout(height=200, margin=dict(t=0,b=0,l=0,r=100),
             paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
-            legend=dict(font=dict(size=8), orientation="v", x=1.02, y=0.5, xanchor="left"),
-            annotations=[dict(text=f"<b>{total}</b>", x=0.35, y=0.5, font_size=12, showarrow=False)])
+            legend=dict(font=dict(size=9), orientation="v", x=1.02, y=0.5, xanchor="left"),
+            annotations=[dict(text=f"<b>{total}</b>", x=0.35, y=0.5, font_size=14, showarrow=False)])
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
 
     with ac:
