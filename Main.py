@@ -231,7 +231,7 @@ with R:
     <div class="ai-h">
         <div>
             <div style="display:flex;align-items:center;gap:4px;">
-                <span class="ai-n">AI Assistant</span>
+                <span class="ai-n">Green Finance AI Assistant</span>
                 <span class="beta">BETA</span>
             </div>
             <div class="ai-s">Powered by real-time BigQuery data</div>
