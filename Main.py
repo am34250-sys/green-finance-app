@@ -185,7 +185,7 @@ with L:
             marker_colors=colors[:len(sd)], textinfo="percent", textfont_size=8))
         fig.update_layout(height=220, margin=dict(t=0,b=0,l=0,r=110),
             paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
-            legend=dict(font=dict(size=9), orientation="v", x=1.02, y=0.5, xanchor="left"),
+            legend=dict(font=dict(size=11), orientation="v", x=1.02, y=0.5, xanchor="left"),
             annotations=[dict(text=f"<b>{total}</b><br><span style='font-size:10px'>Total</span>", x=0.35, y=0.5, font_size=13, showarrow=False)])
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
 
