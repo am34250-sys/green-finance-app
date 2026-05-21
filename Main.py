@@ -340,7 +340,7 @@ with L:
     with lh2:
         # Align button to the right
         st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-        bc1, bc2 = st.columns([2, 1])
+        bc1, bc2 = st.columns([1, 1])
         with bc2:
             if st.button("View all →", use_container_width=True, key="view_all_companies_btn"):
                 show_all_companies(data)
