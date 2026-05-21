@@ -49,8 +49,8 @@ st.markdown("""
 .stTextInput input::placeholder { color: rgba(255,255,255,0.8) !important; }
 .stTextInput input:focus { box-shadow: none !important; }
 
-.stButton button{border-radius:20px !important;font-size:11px !important;font-weight:500 !important;border:1px solid #e2e8f0 !important;background:white !important;color:#334155 !important;padding:6px 10px !important;}
-.stButton button:hover{background:#f0fdf4 !important;border-color:#86efac !important;color:#15803d !important;}
+.stButton button{border-radius:25px !important;font-size:12px !important;font-weight:500 !important;border:1px solid #e2e8f0 !important;background:white !important;color:#334155 !important;padding:8px 14px !important;text-align:left !important;}
+.stButton button:hover{background:#f0fdf4 !important;border-color:#86efac !important;color:#059669 !important;}
 div[data-testid="column"]{padding:0 3px !important;}
 </style>
 """, unsafe_allow_html=True)
@@ -254,17 +254,21 @@ with R:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
     # Quick Analysis
-    st.markdown('<div style="font-size:11px;font-weight:600;color:#0f172a;margin:10px 0 6px;">Quick Analysis</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;padding:14px 16px;margin-top:8px;">
+        <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:10px;">Quick Analysis</div>
+    </div>
+    """, unsafe_allow_html=True)
     qa, qb = st.columns(2)
     with qa:
-        if st.button("🏆 Best Investment", use_container_width=True, key="q1"):
+        if st.button("🏆  Best Investment", use_container_width=True, key="q1"):
             st.session_state.auto_q = "Which company is the best investment combining financial and ESG performance?"
-        if st.button("📊 Risk Comparison", use_container_width=True, key="q3"):
+        if st.button("📊  Risk Comparison", use_container_width=True, key="q3"):
             st.session_state.auto_q = "Compare highest and lowest risk companies"
     with qb:
-        if st.button("🌍 ESG Leaders", use_container_width=True, key="q2"):
+        if st.button("🌍  ESG Leaders", use_container_width=True, key="q2"):
             st.session_state.auto_q = "Which companies are the ESG sustainability leaders?"
-        if st.button("⚠️ Companies to Watch", use_container_width=True, key="q4"):
+        if st.button("⚠️  Companies to Watch", use_container_width=True, key="q4"):
             st.session_state.auto_q = "Which companies should investors watch carefully?"
 
     question = None
