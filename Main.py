@@ -96,11 +96,11 @@ def kpi(ico, ico_bg, lbl, val, val_color, trend_txt, trend_color, td, seed):
   <div style="padding:10px 12px 6px;">
     <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
       <div style="width:24px;height:24px;background:{ico_bg};border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;">{ico}</div>
-      <span style="font-size:10px;color:#64748b;font-weight:500;">{lbl}</span>
+      <span style="font-size:12px;color:#64748b;font-weight:500;">{lbl}</span>
     </div>
     <div style="display:flex;align-items:baseline;gap:6px;">
-      <span style="font-size:24px;font-weight:700;color:{val_color};line-height:1;">{val}</span>
-      <span style="font-size:9px;font-weight:500;color:{trend_color};">{trend_txt}</span>
+      <span style="font-size:28px;font-weight:700;color:{val_color};line-height:1;">{val}</span>
+      <span style="font-size:10px;font-weight:500;color:{trend_color};">{trend_txt}</span>
     </div>
   </div>
   {svg_spark(td, seed)}
