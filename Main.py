@@ -411,10 +411,7 @@ with R:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
     if "messages" not in st.session_state:
-        st.session_state.messages = []
-
-    for k in [k for k in st.session_state if k.startswith("ai_")]:
-        del st.session_state[k]
+        st.session_state.messages = []W
     
     question = None
     if send and user_input:
