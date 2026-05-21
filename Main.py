@@ -226,39 +226,44 @@ with L:
 
 
 with R:
-    # AI ASSISTANT — dizajni i ri
-    st.markdown(f"""<div class="ai-box">
-    <div class="ai-h">
-        <div>
-            <div style="display:flex;align-items:center;gap:4px;">
-                <span class="ai-n">Green Finance AI Assistant</span>
-                <span class="beta">BETA</span>
+    # AI BOX i plotë si HTML
+    st.markdown(f"""
+    <div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px;margin-bottom:8px;">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:14px;font-weight:700;color:#0f172a;">Green Finance AI Assistant</span>
+                    <span style="background:#059669;color:white;padding:2px 7px;border-radius:20px;font-size:8px;font-weight:700;text-transform:uppercase;">BETA</span>
+                </div>
+                <div style="font-size:10px;color:#94a3b8;margin-top:1px;">Powered by real-time BigQuery data</div>
             </div>
-            <div class="ai-s">Powered by real-time BigQuery data</div>
+            <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;font-size:18px;">🤖</div>
         </div>
-        <div class="ai-robot">🤖</div>
+
+        <!-- Intro message -->
+        <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;color:#334155;margin-bottom:12px;">
+            Hello! I analyze <b>{total} S&P 500 companies</b> using real-time data from BigQuery. Ask me about risks, green scores, or investment recommendations!
+        </div>
+
+        <!-- Quick Analysis -->
+        <div style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:8px;">Quick Analysis</div>
+
     </div>
-    <div class="ai-body">
-        <div class="amsg">Hello! I analyze {total} S&amp;P 500 companies using real-time data from BigQuery. Ask me about risks, green scores, or investment recommendations!</div>
-    </div>
-    </div>""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Input gjelbër + send button
+    # Input
     ci, cb = st.columns([5,1])
     with ci:
         user_input = st.text_input("", placeholder="Ask me anything...", label_visibility="collapsed", key="chat_input")
     with cb:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
-    # Quick Analysis brenda box
-    st.markdown("""
-    <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;padding:14px 16px;margin-top:0px;">
-        <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:10px;">Quick Analysis</div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Buttons
     qa, qb = st.columns(2)
     with qa:
         if st.button("🏆  Best Investment", use_container_width=True, key="q1"):
