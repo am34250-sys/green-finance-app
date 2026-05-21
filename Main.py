@@ -73,7 +73,6 @@ def init_clients():
             st.error("GEMINI_KEY mungon ne Streamlit Secrets.")
             st.stop()
         genai.configure(api_key=GEMINI_KEY)
-        # gemini-2.0-flash-lite: limit me i larte falas, me i shpejte
         model = genai.GenerativeModel("gemini-2.0-flash-lite")
     except Exception as e:
         st.error(f"Gemini inicializimi deshtoi: {e}")
@@ -97,7 +96,6 @@ def get_data():
     """
     return [dict(row) for row in bq_client.query(q).result()]
 
-# Cache 5 minuta — e njejta pyetje nuk ben thirrje te re API
 @st.cache_data(ttl=300)
 def ask_gemini(question, data_str):
     try:
@@ -201,6 +199,7 @@ with L:
     st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
     sc, ac = st.columns([1,1], gap="small")
+
     with sc:
         st.markdown("""<div class="card"><div class="ch"><span class="ct">Sector Breakdown</span></div></div>""", unsafe_allow_html=True)
         sd = df["sector"].value_counts().reset_index()
@@ -217,24 +216,26 @@ with L:
     with ac:
         st.markdown("""<div class="card"><div class="ch">
             <span class="ct">🔔 Recent Alerts</span>
-            <span style="font-size:9px;color:#059669;font-weight:600;">View all →</span>
         </div></div>""", unsafe_allow_html=True)
-        hr2=[d for d in data if d["financial_risk_score"]>=60]
-        lg2=[d for d in data if d["green_score"]<=20]
-        bc2=max(data,key=lambda x:x["green_score"]) if data else None
+
+        hr2 = [d for d in data if d["financial_risk_score"] >= 60]
+        lg2 = [d for d in data if d["green_score"] <= 20]
+        bc2 = max(data, key=lambda x: x["green_score"]) if data else None
+
+        # 3 alertet kryesore
         if hr2:
-            c=hr2[0]
+            c = hr2[0]
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #dc2626;">
                 <div class="aico" style="background:#fef2f2;">⚠️</div>
                 <div><div class="at">High Risk — {c['name'][:18]}</div>
-                <div class="ad">{c['symbol']} · Risk score {c['financial_risk_score']}/100 · {c['sector'][:14]}</div>
+                <div class="ad">{c['symbol']} · Risk {c['financial_risk_score']}/100 · {c['sector'][:14]}</div>
                 <div class="atm">Just now</div></div></div>""", unsafe_allow_html=True)
         if lg2:
-            c=lg2[0]
+            c = lg2[0]
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #f59e0b;">
                 <div class="aico" style="background:#fffbeb;">🏭</div>
                 <div><div class="at">Low ESG — {c['name'][:18]}</div>
-                <div class="ad">{c['symbol']} · Green score {c['green_score']}/100 · ESG {c['esg_rating']}</div>
+                <div class="ad">{c['symbol']} · Green {c['green_score']}/100 · ESG {c['esg_rating']}</div>
                 <div class="atm">15m ago</div></div></div>""", unsafe_allow_html=True)
         else:
             st.markdown("""<div class="alrt" style="border-left:3px solid #22c55e;">
@@ -246,9 +247,40 @@ with L:
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #3b82f6;">
                 <div class="aico" style="background:#eff6ff;">🌿</div>
                 <div><div class="at">ESG Leader — {bc2['name'][:18]}</div>
-                <div class="ad">{bc2['symbol']} · Green score {bc2['green_score']}/100 · ESG {bc2['esg_rating']}</div>
+                <div class="ad">{bc2['symbol']} · Green {bc2['green_score']}/100 · ESG {bc2['esg_rating']}</div>
                 <div class="atm">1h ago</div></div></div>""", unsafe_allow_html=True)
 
+        # View all — expander aktiv
+        with st.expander("📋 View all alerts →"):
+            st.markdown("**⚠️ High Risk Companies**")
+            if hr2:
+                for d in hr2:
+                    st.markdown(f"""<div class="alrt" style="border-left:3px solid #dc2626;">
+                        <div class="aico" style="background:#fef2f2;">⚠️</div>
+                        <div><div class="at">{d['name'][:22]}</div>
+                        <div class="ad">{d['symbol']} · Risk {d['financial_risk_score']}/100 · {d['sector'][:16]}</div>
+                        </div></div>""", unsafe_allow_html=True)
+            else:
+                st.markdown("<div class='ad'>Asnje kompani me risk te larte.</div>", unsafe_allow_html=True)
+
+            st.markdown("**🏭 Low ESG Companies**")
+            if lg2:
+                for d in lg2:
+                    st.markdown(f"""<div class="alrt" style="border-left:3px solid #f59e0b;">
+                        <div class="aico" style="background:#fffbeb;">🏭</div>
+                        <div><div class="at">{d['name'][:22]}</div>
+                        <div class="ad">{d['symbol']} · Green {d['green_score']}/100 · ESG {d['esg_rating']}</div>
+                        </div></div>""", unsafe_allow_html=True)
+            else:
+                st.markdown("<div class='ad'>Asnje kompani me ESG te ulet.</div>", unsafe_allow_html=True)
+
+            st.markdown("**🌿 Top 5 ESG Leaders**")
+            for d in sorted(data, key=lambda x: x["green_score"], reverse=True)[:5]:
+                st.markdown(f"""<div class="alrt" style="border-left:3px solid #3b82f6;">
+                    <div class="aico" style="background:#eff6ff;">🌿</div>
+                    <div><div class="at">{d['name'][:22]}</div>
+                    <div class="ad">{d['symbol']} · Green {d['green_score']}/100 · ESG {d['esg_rating']}</div>
+                    </div></div>""", unsafe_allow_html=True)
 
 with R:
     # 1. AI Assistant header
@@ -304,7 +336,6 @@ with R:
     if question:
         st.session_state.messages.append({"role": "user", "content": question})
         with st.spinner("Analyzing..."):
-            # Pergato data_str per cache
             info = "".join([
                 f"- {d['symbol']} ({d['name']}): Risk={d['financial_risk_score']}, "
                 f"Green={d['green_score']}, ESG={d['esg_rating']}\n"
