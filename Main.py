@@ -236,8 +236,6 @@ with R:
     st.markdown(f"""<div class="amsg">I analyze <b>{total} S&P 500 companies</b> via BigQuery.<br>
     Ask: investment strategy · ESG leaders · financial risks</div>""", unsafe_allow_html=True)
 
-    question = st.chat_input("Ask me anything...")
-
     st.markdown('<div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin:8px 0 5px;">Quick Analysis</div>', unsafe_allow_html=True)
 
     qa,qb=st.columns(2)
@@ -251,6 +249,8 @@ with R:
             st.session_state.auto_q="Which companies are the ESG sustainability leaders?"
         if st.button("⚠️ Watch List",use_container_width=True,key="q4"):
             st.session_state.auto_q="Which companies should investors watch carefully?"
+
+    question = st.chat_input("Ask me anything...")
 
     if "auto_q" in st.session_state:
         question=st.session_state.auto_q
