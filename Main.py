@@ -411,7 +411,7 @@ with R:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
     if "messages" not in st.session_state:
-        st.session_state.messages = []W
+        st.session_state.messages = []
     
     question = None
     if send and user_input:
