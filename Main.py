@@ -45,6 +45,10 @@ st.markdown("""
 .stButton button{border-radius:25px !important;font-size:12px !important;font-weight:500 !important;border:1px solid #e2e8f0 !important;background:white !important;color:#334155 !important;padding:8px 14px !important;text-align:left !important;}
 .stButton button:hover{background:#f0fdf4 !important;border-color:#86efac !important;color:#059669 !important;}
 div[data-testid="column"]{padding:0 3px !important;}
+
+.sector-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f8fafc;}
+.sector-name{font-size:11px;color:#334155;display:flex;align-items:center;gap:6px;min-width:110px;}
+.sector-ico{font-size:13px;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -125,6 +129,22 @@ def svg_spark(trend="up", seed=1):
     fp = f"0,{h} "+ps+f" {w},{h}"
     return f'<svg viewBox="0 0 {w} {h}" style="width:100%;height:28px;display:block;"><polygon points="{fp}" fill="{fill}"/><polyline points="{ps}" fill="none" stroke="{color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
+def svg_spark_small(trend="up", seed=1):
+    """Sparkline i vogel per tabelen e sektoreve"""
+    pts, w, h = 12, 80, 22
+    xs = [i * w / (pts-1) for i in range(pts)]
+    ys_raw = [math.sin(i*0.8 + seed*0.7)*0.5 + (i/pts*1.5 if trend=="up" else -i/pts*1.5 if trend=="down" else math.sin(i*0.5)*0.3) for i in range(pts)]
+    mn, mx = min(ys_raw), max(ys_raw)
+    ys = [h-2-(y-mn)/(mx-mn+0.001)*(h-4) for y in ys_raw]
+    if trend == "up":
+        color = "#22c55e"
+    elif trend == "down":
+        color = "#ef4444"
+    else:
+        color = "#94a3b8"
+    ps = " ".join(f"{x:.1f},{y:.1f}" for x,y in zip(xs,ys))
+    return f'<svg viewBox="0 0 {w} {h}" style="width:80px;height:22px;display:inline-block;"><polyline points="{ps}" fill="none" stroke="{color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+
 def kpi(ico, ico_bg, lbl, val, val_color, trend_txt, trend_color, td, seed):
     return f"""<div style="background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
   <div style="padding:10px 12px 6px;">
@@ -139,6 +159,16 @@ def kpi(ico, ico_bg, lbl, val, val_color, trend_txt, trend_color, td, seed):
   </div>
   {svg_spark(td, seed)}
 </div>"""
+
+# Ikonat per sektoret
+SECTOR_ICONS = {
+    "Technology": "💻", "Chemicals": "🧪", "Utilities": "⚡",
+    "Health Care": "❤️", "Semiconductors": "🔬", "Building": "🏗️",
+    "Insurance": "🛡️", "Media": "📺", "Automobiles": "🚗",
+    "Real Estate": "🏢", "Biotechnology": "🧬", "Energy": "⚡",
+    "Industrial": "⚙️", "Retail": "🛒", "Finance": "💰",
+    "Consumer": "🛍️", "Materials": "🪨", "Aerospace": "✈️",
+}
 
 data = get_data()
 df = pd.DataFrame(data)
@@ -201,17 +231,57 @@ with L:
     sc, ac = st.columns([1,1], gap="small")
 
     with sc:
-        st.markdown("""<div class="card"><div class="ch"><span class="ct">Sector Breakdown</span></div></div>""", unsafe_allow_html=True)
-        sd = df["sector"].value_counts().reset_index()
-        sd.columns = ["Sector","Count"]
-        colors = ["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
-        fig = go.Figure(go.Pie(labels=sd["Sector"], values=sd["Count"], hole=0.6,
-            marker_colors=colors[:len(sd)], textinfo="percent", textfont_size=8))
-        fig.update_layout(height=220, margin=dict(t=0,b=0,l=0,r=110),
-            paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
-            legend=dict(font=dict(size=11), orientation="v", x=1.02, y=0.5, xanchor="left"),
-            annotations=[dict(text=f"<b>{total}</b><br><span style='font-size:10px'>Total</span>", x=0.35, y=0.5, font_size=13, showarrow=False)])
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
+        # Tabs: Pie chart | Sector Trends
+        tab1, tab2 = st.tabs(["🥧 Breakdown", "📈 Sector Trends"])
+
+        with tab1:
+            sd = df["sector"].value_counts().reset_index()
+            sd.columns = ["Sector","Count"]
+            colors = ["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
+            fig = go.Figure(go.Pie(labels=sd["Sector"], values=sd["Count"], hole=0.6,
+                marker_colors=colors[:len(sd)], textinfo="percent", textfont_size=8))
+            fig.update_layout(height=220, margin=dict(t=0,b=0,l=0,r=110),
+                paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
+                legend=dict(font=dict(size=11), orientation="v", x=1.02, y=0.5, xanchor="left"),
+                annotations=[dict(text=f"<b>{total}</b><br><span style='font-size:10px'>Total</span>", x=0.35, y=0.5, font_size=13, showarrow=False)])
+            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
+
+        with tab2:
+            # Llogarit trend per cdo sektor bazuar ne avg risk dhe avg green score
+            sector_stats = df.groupby("sector").agg(
+                avg_risk=("financial_risk_score","mean"),
+                avg_green=("green_score","mean"),
+                count=("symbol","count")
+            ).reset_index()
+
+            # Header
+            st.markdown("""<div style="display:flex;justify-content:space-between;padding:4px 0 6px;border-bottom:1px solid #f1f5f9;">
+                <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;">Sector</span>
+                <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;">Trend</span>
+            </div>""", unsafe_allow_html=True)
+
+            for i, row in sector_stats.iterrows():
+                sector = row["sector"]
+                avg_risk = row["avg_risk"]
+                avg_green = row["avg_green"]
+                ico = SECTOR_ICONS.get(sector, "📊")
+
+                # Trend: green score te larte + risk te ulet = up, otherwise down/neutral
+                if avg_green >= 70 and avg_risk < 40:
+                    trend = "up"
+                elif avg_risk >= 60 or avg_green < 40:
+                    trend = "down"
+                else:
+                    trend = "neutral"
+
+                spark = svg_spark_small(trend, seed=i+1)
+                st.markdown(f"""<div class="sector-row">
+                    <div class="sector-name">
+                        <span class="sector-ico">{ico}</span>
+                        <span>{sector}</span>
+                    </div>
+                    <div>{spark}</div>
+                </div>""", unsafe_allow_html=True)
 
     with ac:
         st.markdown("""<div class="card"><div class="ch">
@@ -222,7 +292,6 @@ with L:
         lg2 = [d for d in data if d["green_score"] <= 20]
         bc2 = max(data, key=lambda x: x["green_score"]) if data else None
 
-        # 3 alertet kryesore
         if hr2:
             c = hr2[0]
             st.markdown(f"""<div class="alrt" style="border-left:3px solid #dc2626;">
@@ -250,7 +319,6 @@ with L:
                 <div class="ad">{bc2['symbol']} · Green {bc2['green_score']}/100 · ESG {bc2['esg_rating']}</div>
                 <div class="atm">1h ago</div></div></div>""", unsafe_allow_html=True)
 
-        # View all — expander aktiv
         with st.expander("📋 View all alerts →"):
             st.markdown("**⚠️ High Risk Companies**")
             if hr2:
@@ -283,7 +351,6 @@ with L:
                     </div></div>""", unsafe_allow_html=True)
 
 with R:
-    # 1. AI Assistant header
     st.markdown(f"""<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px 16px 12px 16px;margin-bottom:6px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <div>
@@ -300,7 +367,6 @@ with R:
         </div>
     </div>""", unsafe_allow_html=True)
 
-    # 2. Quick Analysis
     with st.container(border=True):
         st.markdown("**Quick Analysis**")
         qa, qb = st.columns(2, gap="small")
@@ -315,14 +381,12 @@ with R:
             if st.button("⚠️  Companies to Watch", use_container_width=True, key="q4"):
                 st.session_state.auto_q = "Which companies should investors watch carefully?"
 
-    # 3. Input bar
     ci, cb = st.columns([5,1])
     with ci:
         user_input = st.text_input("", placeholder="Ask me anything...", label_visibility="collapsed", key="chat_input")
     with cb:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
-    # 4. Chat messages
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
