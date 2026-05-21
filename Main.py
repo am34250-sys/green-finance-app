@@ -46,8 +46,19 @@ st.markdown("""
 .stButton button:hover{background:#f0fdf4 !important;border-color:#86efac !important;color:#059669 !important;}
 div[data-testid="column"]{padding:0 3px !important;}
 
-.sector-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f8fafc;}
-.sector-name{font-size:11px;color:#334155;display:flex;align-items:center;gap:6px;min-width:110px;}
+/* Tabela custom */
+.ctable{width:100%;border-collapse:collapse;font-size:12px;}
+.ctable th{font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;padding:7px 10px;border-bottom:1px solid #f1f5f9;text-align:left;letter-spacing:.04em;}
+.ctable td{padding:8px 10px;border-bottom:1px solid #f8fafc;color:#334155;vertical-align:middle;}
+.ctable tr:hover td{background:#f8fafc;}
+.sym{font-weight:700;color:#0f172a;font-size:12px;}
+.chg-up{color:#16a34a;font-weight:600;}
+.chg-dn{color:#dc2626;font-weight:600;}
+.risk-red{background:#fef2f2;color:#dc2626;padding:2px 7px;border-radius:20px;font-weight:600;font-size:11px;}
+.risk-yel{background:#fffbeb;color:#d97706;padding:2px 7px;border-radius:20px;font-weight:600;font-size:11px;}
+.risk-grn{background:#f0fdf4;color:#16a34a;padding:2px 7px;border-radius:20px;font-weight:600;font-size:11px;}
+.esg-a{color:#16a34a;font-weight:600;} .esg-b{color:#2563eb;font-weight:600;} .esg-c{color:#dc2626;font-weight:600;}
+.sec-cell{display:flex;align-items:center;gap:5px;color:#64748b;font-size:11px;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -128,15 +139,16 @@ def svg_spark(trend="up", seed=1):
     fp = f"0,{h} "+ps+f" {w},{h}"
     return f'<svg viewBox="0 0 {w} {h}" style="width:100%;height:28px;display:block;"><polygon points="{fp}" fill="{fill}"/><polyline points="{ps}" fill="none" stroke="{color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
-def svg_spark_small(trend="up", seed=1):
-    pts, w, h = 12, 80, 22
+def trend_spark(trend="up", seed=1):
+    """Sparkline per kolonen TREND ne tabele"""
+    pts, w, h = 10, 70, 20
     xs = [i * w / (pts-1) for i in range(pts)]
-    ys_raw = [math.sin(i*0.8 + seed*0.7)*0.5 + (i/pts*1.5 if trend=="up" else -i/pts*1.5 if trend=="down" else math.sin(i*0.5)*0.3) for i in range(pts)]
+    ys_raw = [math.sin(i*0.9 + seed*0.6)*0.4 + (i/pts*1.2 if trend=="up" else -i/pts*1.2 if trend=="down" else math.sin(i*0.4)*0.2) for i in range(pts)]
     mn, mx = min(ys_raw), max(ys_raw)
     ys = [h-2-(y-mn)/(mx-mn+0.001)*(h-4) for y in ys_raw]
     color = "#22c55e" if trend=="up" else ("#ef4444" if trend=="down" else "#94a3b8")
     ps = " ".join(f"{x:.1f},{y:.1f}" for x,y in zip(xs,ys))
-    return f'<svg viewBox="0 0 {w} {h}" style="width:80px;height:22px;display:inline-block;"><polyline points="{ps}" fill="none" stroke="{color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    return f'<svg viewBox="0 0 {w} {h}" style="width:70px;height:20px;display:inline-block;vertical-align:middle;"><polyline points="{ps}" fill="none" stroke="{color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
 def kpi(ico, ico_bg, lbl, val, val_color, trend_txt, trend_color, td, seed):
     return f"""<div style="background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
@@ -158,11 +170,59 @@ SECTOR_ICONS = {
     "Health Care": "❤️", "Semiconductors": "🔬", "Building": "🏗️",
     "Insurance": "🛡️", "Media": "📺", "Automobiles": "🚗",
     "Real Estate": "🏢", "Biotechnology": "🧬", "Energy": "⚡",
-    "Industrial": "⚙️", "Retail": "🛒", "Finance": "💰",
-    "Life Sciences": "🔭", "Consumer": "🛍️", "Materials": "🪨",
+    "Industrial": "⚙️", "Industrial Con...": "⚙️", "Retail": "🛒",
+    "Finance": "💰", "Life Sciences": "🔭", "Consumer": "🛍️",
 }
 
-# ── MODAL — duhet te jete ne nivel te larte, jashte cdo `with` blloku ────────
+def build_table_rows(rows):
+    html = ""
+    for i, d in enumerate(rows):
+        chg = d["change_percent"]
+        chg_cls = "chg-up" if chg >= 0 else "chg-dn"
+        chg_str = f"+{chg:.2f}%" if chg >= 0 else f"{chg:.2f}%"
+
+        risk = d["financial_risk_score"]
+        if risk >= 60:
+            risk_html = f'<span class="risk-red">● {risk}</span>'
+            tr = "down"
+        elif risk >= 40:
+            risk_html = f'<span class="risk-yel">● {risk}</span>'
+            tr = "neutral"
+        else:
+            risk_html = f'<span class="risk-grn">● {risk}</span>'
+            tr = "up"
+
+        gs = d["green_score"]
+        green_ico = "🌿" if gs >= 70 else ("🌱" if gs >= 40 else "🏭")
+
+        esg = d["esg_rating"]
+        if esg and esg.startswith("A"):
+            esg_cls = "esg-a"
+        elif esg and esg.startswith("B"):
+            esg_cls = "esg-b"
+        else:
+            esg_cls = "esg-c"
+
+        sec = d["sector"]
+        sec_ico = SECTOR_ICONS.get(sec, "📊")
+        sec_short = sec[:14]+"…" if len(sec)>14 else sec
+
+        spark = trend_spark(tr, seed=i+1)
+
+        html += f"""<tr>
+            <td><span class="sym">{d['symbol']}</span></td>
+            <td style="color:#475569">{d['name'][:22]}{"…" if len(d['name'])>22 else ""}</td>
+            <td style="font-weight:600">${d['price']:.2f}</td>
+            <td class="{chg_cls}">{chg_str}</td>
+            <td>{risk_html}</td>
+            <td>{green_ico} {gs}</td>
+            <td class="{esg_cls}">{esg}</td>
+            <td><div class="sec-cell">{sec_ico} {sec_short}</div></td>
+            <td>{spark}</td>
+        </tr>"""
+    return html
+
+# ── MODAL ────────────────────────────────────────────────────────────────────
 @st.dialog("🔔 All Alerts", width="large")
 def show_all_alerts(hr2, lg2, data):
     st.markdown("#### ⚠️ High Risk Companies")
@@ -175,7 +235,6 @@ def show_all_alerts(hr2, lg2, data):
                 </div></div>""", unsafe_allow_html=True)
     else:
         st.info("Asnje kompani me risk te larte.")
-
     st.markdown("#### 🏭 Low ESG Companies")
     if lg2:
         for d in lg2:
@@ -186,7 +245,6 @@ def show_all_alerts(hr2, lg2, data):
                 </div></div>""", unsafe_allow_html=True)
     else:
         st.info("Asnje kompani me ESG te ulet.")
-
     st.markdown("#### 🌿 Top 5 ESG Leaders")
     for d in sorted(data, key=lambda x: x["green_score"], reverse=True)[:5]:
         st.markdown(f"""<div class="alrt" style="border-left:3px solid #3b82f6;">
@@ -194,6 +252,18 @@ def show_all_alerts(hr2, lg2, data):
             <div><div class="at">{d['name']}</div>
             <div class="ad">{d['symbol']} · Green {d['green_score']}/100 · ESG {d['esg_rating']}</div>
             </div></div>""", unsafe_allow_html=True)
+
+@st.dialog("📊 All Companies", width="large")
+def show_all_companies(data):
+    rows_html = build_table_rows(data)
+    st.markdown(f"""
+    <table class="ctable">
+      <thead><tr>
+        <th>Symbol</th><th>Company</th><th>Price</th><th>Change</th>
+        <th>Risk Score</th><th>Green Score</th><th>ESG</th><th>Sector</th><th>Trend</th>
+      </tr></thead>
+      <tbody>{rows_html}</tbody>
+    </table>""", unsafe_allow_html=True)
 # ─────────────────────────────────────────────────────────────────────────────
 
 data = get_data()
@@ -231,25 +301,33 @@ st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 L, R = st.columns([14, 9], gap="medium")
 
 with L:
-    st.markdown("""<div class="card"><div class="ch">
-        <div style="display:flex;align-items:center;gap:5px;"><div class="dot"></div><span class="ct">Live Company Scores</span></div>
-        <div class="rpill"><div class="dot"></div>Auto-refresh · 60s</div>
-    </div></div>""", unsafe_allow_html=True)
+    # Header me "View all" djathtas
+    hc1, hc2, hc3 = st.columns([6, 3, 2])
+    with hc1:
+        st.markdown("""<div style="display:flex;align-items:center;gap:5px;padding:4px 0;">
+            <div class="dot"></div><span class="ct">Live Company Scores</span>
+        </div>""", unsafe_allow_html=True)
+    with hc2:
+        st.markdown("""<div style="padding:4px 0;">
+            <div class="rpill"><div class="dot"></div>Auto-refresh · 60s</div>
+        </div>""", unsafe_allow_html=True)
+    with hc3:
+        if st.button("View all →", key="view_all_companies", use_container_width=True):
+            show_all_companies(data)
 
-    def fr(s): return f"🔴 {s}" if s>=60 else (f"🟡 {s}" if s>=40 else f"🟢 {s}")
-    def fg(s): return f"🌿 {s}" if s>=70 else (f"🌱 {s}" if s>=40 else f"🏭 {s}")
-
-    ddf = pd.DataFrame({
-        "Symbol": df["symbol"],
-        "Company": df["name"].apply(lambda x: x[:20]+"…" if len(x)>20 else x),
-        "Price": df["price"].apply(lambda x: f"${x:.2f}"),
-        "Change": df["change_percent"].apply(lambda x: f"+{x:.2f}%" if x>=0 else f"{x:.2f}%"),
-        "Risk": df["financial_risk_score"].apply(fr),
-        "Green": df["green_score"].apply(fg),
-        "ESG": df["esg_rating"],
-        "Sector": df["sector"].apply(lambda x: x[:13]+"…" if len(x)>13 else x),
-    })
-    st.dataframe(ddf, use_container_width=True, hide_index=True, height=320)
+    # Tabela HTML me TREND kolone — trego 10 rreshtat e pare
+    preview = data[:10]
+    rows_html = build_table_rows(preview)
+    st.markdown(f"""
+    <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
+    <table class="ctable">
+      <thead><tr>
+        <th>Symbol</th><th>Company</th><th>Price</th><th>Change</th>
+        <th>Risk Score</th><th>Green Score</th><th>ESG</th><th>Sector</th><th>Trend</th>
+      </tr></thead>
+      <tbody>{rows_html}</tbody>
+    </table>
+    </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
@@ -281,14 +359,16 @@ with L:
             for i, row in sector_stats.iterrows():
                 ico = SECTOR_ICONS.get(row["sector"], "📊")
                 if row["avg_green"] >= 70 and row["avg_risk"] < 40:
-                    trend = "up"
+                    tr = "up"
                 elif row["avg_risk"] >= 60 or row["avg_green"] < 40:
-                    trend = "down"
+                    tr = "down"
                 else:
-                    trend = "neutral"
-                spark = svg_spark_small(trend, seed=i+1)
-                st.markdown(f"""<div class="sector-row">
-                    <div class="sector-name"><span>{ico}</span><span>{row['sector']}</span></div>
+                    tr = "neutral"
+                spark = trend_spark(tr, seed=i+1)
+                st.markdown(f"""<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f8fafc;">
+                    <div style="font-size:11px;color:#334155;display:flex;align-items:center;gap:6px;">
+                        <span>{ico}</span><span>{row['sector']}</span>
+                    </div>
                     <div>{spark}</div>
                 </div>""", unsafe_allow_html=True)
 
@@ -297,7 +377,6 @@ with L:
         lg2 = [d for d in data if d["green_score"] <= 20]
         bc2 = max(data, key=lambda x: x["green_score"]) if data else None
 
-        # Header me "View all" si link djathtas
         a1, a2 = st.columns([3, 1])
         with a1:
             st.markdown("""<div style="padding:4px 0 6px;"><span class="ct">🔔 Recent Alerts</span></div>""", unsafe_allow_html=True)
