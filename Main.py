@@ -226,7 +226,7 @@ with L:
 
 
 with R:
-    st.markdown(f"""<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px;margin-bottom:8px;">
+    st.markdown(f"""<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:16px 16px 0 16px;margin-bottom:0px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <div>
                 <div style="display:flex;align-items:center;gap:6px;">
@@ -240,31 +240,35 @@ with R:
         <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;color:#334155;margin-bottom:12px;">
             Hello! I analyze <b>{total} S&P 500 companies</b> using real-time data from BigQuery. Ask me about risks, green scores, or investment recommendations!
         </div>
-        <div style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:8px;">Quick Analysis</div>
     </div>""", unsafe_allow_html=True)
 
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
-    # Input
+    # Input gjelbër
     ci, cb = st.columns([5,1])
     with ci:
         user_input = st.text_input("", placeholder="Ask me anything...", label_visibility="collapsed", key="chat_input")
     with cb:
         send = st.button("➤", use_container_width=True, key="send_btn")
 
-    # Buttons
+    # Quick Analysis brenda box vijues
+    st.markdown("""<div style="background:white;border-radius:0 0 14px 14px;border:1px solid #e2e8f0;border-top:none;padding:10px 16px 14px 16px;margin-top:-8px;">
+        <div style="font-size:11px;font-weight:600;color:#0f172a;margin-bottom:8px;">Quick Analysis</div>
+    </div>""", unsafe_allow_html=True)
+
     qa, qb = st.columns(2)
     with qa:
-        if st.button("🏆  Best Investment", use_container_width=True, key="q1"):
+        if st.button("🏆 Best Investment", use_container_width=True, key="q1"):
             st.session_state.auto_q = "Which company is the best investment combining financial and ESG performance?"
-        if st.button("📊  Risk Comparison", use_container_width=True, key="q3"):
+        if st.button("📊 Risk Comparison", use_container_width=True, key="q3"):
             st.session_state.auto_q = "Compare highest and lowest risk companies"
     with qb:
-        if st.button("🌍  ESG Leaders", use_container_width=True, key="q2"):
+        if st.button("🌍 ESG Leaders", use_container_width=True, key="q2"):
             st.session_state.auto_q = "Which companies are the ESG sustainability leaders?"
-        if st.button("⚠️  Companies to Watch", use_container_width=True, key="q4"):
+        if st.button("⚠️ Companies to Watch", use_container_width=True, key="q4"):
             st.session_state.auto_q = "Which companies should investors watch carefully?"
+
+
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
     question = None
     if send and user_input:
