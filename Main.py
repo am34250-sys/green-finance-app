@@ -53,11 +53,11 @@ div[data-testid="column"]{padding:0 3px !important;}
 .chg-dn{color:#dc2626;font-weight:600;}
 .risk-red{background:#fef2f2;color:#dc2626;padding:2px 7px;border-radius:20px;font-weight:600;font-size:11px;}
 .risk-yel{background:#fffbeb;color:#d97706;padding:2px 7px;border-radius:20px;font-weight:600;font-size:11px;}
-.risk-grn">● {risk}</span>', "up"
 .risk-grn{background:#f0fdf4;color:#16a34a;padding:2px 7px;border-radius:20px;font-weight:600;font-size:11px;}
 .esg-a{color:#16a34a;font-weight:600;} .esg-b{color:#2563eb;font-weight:600;} .esg-c{color:#dc2626;font-weight:600;}
 .sec-cell{display:flex;align-items:center;gap:5px;color:#64748b;font-size:11px;}
 
+/* AI Chat Card native styling */
 .ai-header-box {
     background: white;
     border: 1px solid #e2e8f0;
@@ -114,7 +114,7 @@ def get_data():
     """
     return [dict(row) for row in bq_client.query(q).result()]
 
-# ── Gemini (Përdorimi i endpoint-it zyrtar /v1/) ───────────────────────────
+# ── Gemini (Rregulluar endpoint-i dhe modeli zyrtar) ──────────────────────
 def ask_gemini(question, data_str):
     cache_key = f"ai_{hash(question + data_str[:50])}"
     if cache_key in st.session_state:
@@ -284,7 +284,7 @@ with L:
     with hc2:
         st.markdown('<div style="padding:4px 0;"><div class="rpill"><div class="dot"></div>Auto-refresh · 60s</div></div>', unsafe_allow_html=True)
     with hc3:
-        if st.button("View all →", key="view_all_companies", width="stretch"):
+        if st.button("View all →", key="view_all_companies", use_container_width=True):
             show_all_companies(data)
 
     rows_html = build_table_rows(data[:10])
@@ -304,7 +304,7 @@ with L:
             paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
             legend=dict(font=dict(size=11), orientation="v", x=1.02, y=0.5, xanchor="left"),
             annotations=[dict(text=f"<b>{total}</b><br><span style='font-size:10px'>Total</span>", x=0.35, y=0.5, font_size=13, showarrow=False)])
-        st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     with ac:
         hr2 = [d for d in data if d["financial_risk_score"] >= 60]
@@ -315,7 +315,7 @@ with L:
         with a1:
             st.markdown('<div style="padding:4px 0 6px;"><span class="ct">🔔 Recent Alerts</span></div>', unsafe_allow_html=True)
         with a2:
-            if st.button("View all →", key="view_all_btn", width="stretch"):
+            if st.button("View all →", key="view_all_btn", use_container_width=True):
                 show_all_alerts(hr2, lg2, data)
 
         if hr2:
@@ -323,13 +323,14 @@ with L:
             st.markdown(f'<div class="alrt" style="border-left:3px solid #dc2626;"><div class="aico" style="background:#fef2f2;">⚠️</div><div><div class="at">High Risk — {c["name"][:18]}</div><div class="ad">{c["symbol"]} · Risk {c["financial_risk_score"]}/100 · {c["sector"][:14]}</div><div class="atm">Just now</div></div></div>', unsafe_allow_html=True)
         if lg2:
             c = lg2[0]
-            st.markdown(f'<div class="alrt" style="border-left:3px solid #f59e0b;"><div class="aico" style="background:#fffbeb;">🏭</div><div><div class="at">Low ESG — {c["name"][:18]}</div><div class="ad">{c["symbol"]} · Green {d["green_score"]}/100 · ESG {c["esg_rating"]}</div><div class="atm">15m ago</div></div></div>', unsafe_allow_html=True)
+            # Rregulluar NameError: d['green_score'] u zëvendësua me c['green_score']
+            st.markdown(f'<div class="alrt" style="border-left:3px solid #f59e0b;"><div class="aico" style="background:#fffbeb;">🏭</div><div><div class="at">Low ESG — {c["name"][:18]}</div><div class="ad">{c["symbol"]} · Green {c["green_score"]}/100 · ESG {c["esg_rating"]}</div><div class="atm">15m ago</div></div></div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="alrt" style="border-left:3px solid #22c55e;"><div class="aico" style="background:#f0fdf4;">✅</div><div><div class="at">ESG Scores Healthy</div><div class="ad">All tracked companies have stable ESG metrics</div><div class="atm">Updated now</div></div></div>', unsafe_allow_html=True)
         if bc2:
             st.markdown(f'<div class="alrt" style="border-left:3px solid #3b82f6;"><div class="aico" style="background:#eff6ff;">🌿</div><div><div class="at">ESG Leader — {bc2["name"][:18]}</div><div class="ad">{bc2["symbol"]} · Green {bc2["green_score"]}/100 · ESG {bc2["esg_rating"]}</div><div class="atm">1h ago</div></div></div>', unsafe_allow_html=True)
 
-# ── RIGHT COLUMN — CHAT (Rregulluar plotësisht) ───────────────────
+# ── RIGHT COLUMN — CHAT ────────────────────────────────────────────
 with R:
     # ── AI Header ──────────────────────────────────────────────────
     st.markdown(
@@ -355,33 +356,32 @@ with R:
         unsafe_allow_html=True
     )
 
-    # ── Quick Buttons (Vendosin vlerën te active_question) ─────────
+    # ── Quick Buttons ──────────────────────────────────────────────
     with st.container(border=True):
         st.markdown("**Quick Analysis**")
         qa, qb = st.columns(2, gap="small")
         with qa:
-            if st.button("🏆  Best Investment", width="stretch", key="btn_q1"):
+            if st.button("🏆  Best Investment", use_container_width=True, key="btn_q1"):
                 st.session_state.active_question = "Which company is the best investment combining financial and ESG performance?"
-            if st.button("📊  Risk Comparison", width="stretch", key="btn_q3"):
+            if st.button("📊  Risk Comparison", use_container_width=True, key="btn_q3"):
                 st.session_state.active_question = "Compare highest and lowest risk companies."
         with qb:
-            if st.button("🌍  ESG Leaders", width="stretch", key="btn_q2"):
+            if st.button("🌍  ESG Leaders", use_container_width=True, key="btn_q2"):
                 st.session_state.active_question = "Which companies are the ESG sustainability leaders?"
-            if st.button("⚠️  Companies to Watch", width="stretch", key="btn_q4"):
+            if st.button("⚠️  Companies to Watch", use_container_width=True, key="btn_q4"):
                 st.session_state.active_question = "Which companies should investors watch carefully based on high financial risk?"
 
-    # ── Chat Input Seksioni (Krijuar saktë me kolonat e deklaruara para përdorimit) ──
+    # ── Chat Input & Arrow Button ──────────────────────────────────
     ci, cb = st.columns([5, 1])
     with ci:
         user_input = st.text_input("_", placeholder="Ask me anything...", label_visibility="collapsed", key="chat_input")
     with cb:
-        send_clicked = st.button("➤", width="stretch", key="send_btn")
+        send_clicked = st.button("➤", use_container_width=True, key="send_btn")
 
-    # ── Përcaktimi i pyetjes aktive ───────────────────────────────
+    # ── Logic for Triggering Query ─────────────────────────────────
     if send_clicked and user_input:
         st.session_state.active_question = user_input
     
-    # ── Procesimi i Pyetjes nga Gemini ────────────────────────────
     if st.session_state.active_question and not st.session_state.processing:
         st.session_state.processing = True
         q_to_ask = st.session_state.active_question
@@ -395,11 +395,11 @@ with R:
             answer = ask_gemini(q_to_ask, info)
             
         st.session_state.messages.append({"role": "ai", "content": answer})
-        st.session_state.active_question = None  # Resetojmë pyetjen aktive pas përgjigjes
+        st.session_state.active_question = None  
         st.session_state.processing = False
         st.rerun()
 
-    # ── Chat History Vizualizimi ───────────────────────────────────
+    # ── Chat History ───────────────────────────────────────────────
     for msg in st.session_state.messages[-6:]:
         cls = "umsg" if msg["role"] == "user" else "amsg"
         st.markdown(f'<div class="{cls}">{msg["content"]}</div>', unsafe_allow_html=True)
