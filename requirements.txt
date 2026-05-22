@@ -1,9 +1,6 @@
 streamlit
 google-cloud-bigquery
 google-auth
-google-cloud-aiplatform
-vertexai
 pandas
 plotly
 requests
- 
