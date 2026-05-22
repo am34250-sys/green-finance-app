@@ -1,7 +1,7 @@
 import streamlit as st
 from google.cloud import bigquery
 from google.oauth2 import service_account
-import google.generativeai as genai
+import os
 import pandas as pd
 import json
 import plotly.graph_objects as go
@@ -78,18 +78,9 @@ def init_clients():
     except Exception as e:
         st.error(f"BigQuery lidhja deshtoi: {e}")
         st.stop()
-    try:
-        if not GEMINI_KEY:
-            st.error("GEMINI_KEY mungon.")
-            st.stop()
-        genai.configure(api_key=GEMINI_KEY)
-        gemini_model = genai.GenerativeModel("gemini-2.5-flash")
-    except Exception as e:
-        st.error(f"Gemini error: {e}")
-        st.stop()
-    return bq, gemini_model
+    return bq
 
-bq_client, gemini_model = init_clients()
+bq_client = init_clients()
 
 @st.cache_data(ttl=60)
 def get_data():
@@ -106,6 +97,8 @@ def get_data():
     """
     return [dict(row) for row in bq_client.query(q).result()]
 
+import requests
+
 def ask_gemini(question, data_str):
     cache_key = f"ai_{hash(question + data_str[:50])}"
     if cache_key in st.session_state:
@@ -117,15 +110,15 @@ def ask_gemini(question, data_str):
             f"Company data:\n{data_str}\n"
             f"Question: {question}"
         )
-        response = gemini_model.generate_content(prompt)
-        result = response.text
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_KEY}"
+        payload = {"contents": [{"parts": [{"text": prompt}]}]}
+        resp = requests.post(url, json=payload, timeout=30)
+        resp.raise_for_status()
+        result = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
         st.session_state[cache_key] = result
         return result
     except Exception as e:
-        err = str(e)
-        if "429" in err:
-            return "Quota e API u tejkalua. Provo perseri pas 1 minute."
-        return f"Gabim: {err[:200]}"
+        return f"Gabim: {str(e)[:200]}"
 
 def svg_spark(trend="up", seed=1):
     pts, w, h = 24, 300, 28
