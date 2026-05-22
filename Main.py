@@ -2,8 +2,7 @@ import streamlit as st
 from google.cloud import bigquery
 from google.oauth2 import service_account
 import os
-import vertexai
-from vertexai.generative_models import GenerativeModel, GenerationConfig
+import requests
 import pandas as pd
 import json
 import plotly.graph_objects as go
@@ -80,15 +79,6 @@ def init_clients():
     except Exception as e:
         st.error(f"BigQuery lidhja deshtoi: {e}")
         st.stop()
-    try:
-        creds = service_account.Credentials.from_service_account_info(
-            creds_info,
-            scopes=["https://www.googleapis.com/auth/cloud-platform"]
-        )
-        vertexai.init(project=PROJECT_ID, location="us-central1", credentials=creds)
-    except Exception as e:
-        st.error(f"Vertex AI error: {e}")
-        st.stop()
     return bq
 
 bq_client = init_clients()
@@ -121,12 +111,14 @@ def ask_gemini(question, data_str):
             f"Company data:\n{data_str}\n"
             f"Question: {question}"
         )
-        model = GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content(
-            prompt,
-            generation_config=GenerationConfig(max_output_tokens=300, temperature=0.2)
-        )
-        result = response.text
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GEMINI_KEY}"
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"maxOutputTokens": 300}
+        }
+        resp = requests.post(url, json=payload, timeout=30)
+        resp.raise_for_status()
+        result = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
         st.session_state[cache_key] = result
         return result
     except Exception as e:
