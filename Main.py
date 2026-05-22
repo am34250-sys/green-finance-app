@@ -11,7 +11,7 @@ st.set_page_config(page_title="Green Finance Intelligence", page_icon="🌿", la
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap');
 * { font-family: 'Inter', sans-serif !important; }
 .stApp { background: #f8fafc !important; }
 .block-container { padding: 12px 16px !important; max-width: 100% !important; }
@@ -57,24 +57,8 @@ div[data-testid="column"]{padding:0 3px !important;}
 .esg-a{color:#16a34a;font-weight:600;} .esg-b{color:#2563eb;font-weight:600;} .esg-c{color:#dc2626;font-weight:600;}
 .sec-cell{display:flex;align-items:center;gap:5px;color:#64748b;font-size:11px;}
 
-/* AI Chat Card native styling */
-.ai-header-box {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 14px 16px 12px;
-    margin-bottom: 8px;
-}
-.ai-intro-box {
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 12px;
-    line-height: 1.6;
-    color: #334155;
-    margin-top: 10px;
-}
+.ai-header-box { background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px 12px; margin-bottom: 8px; }
+.ai-intro-box { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px 12px; font-size: 12px; line-height: 1.6; color: #334155; margin-top: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -114,7 +98,7 @@ def get_data():
     """
     return [dict(row) for row in bq_client.query(q).result()]
 
-# ── Gemini (Rregulluar endpoint-i dhe modeli zyrtar) ──────────────────────
+# ── Gemini API Integration ────────────────────────────────────────────────
 def ask_gemini(question, data_str):
     cache_key = f"ai_{hash(question + data_str[:50])}"
     if cache_key in st.session_state:
@@ -126,10 +110,7 @@ def ask_gemini(question, data_str):
             f"Company data:\n{data_str}\n"
             f"Question: {question}"
         )
-        # Kalimi në endpoint-in v1beta i cili pranon saktësisht këtë strukturë modeli
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
-        
-        # Sigurohemi që header-i është specifikuar si JSON
         headers = {'Content-Type': 'application/json'}
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
         
@@ -140,7 +121,6 @@ def ask_gemini(question, data_str):
         st.session_state[cache_key] = result
         return result
     except Exception as e:
-        # Kjo do të të tregojë saktësisht kodin e gabimit nëse diçka tjetër dështon
         return f"Gabim: {str(e)[:200]}"
 
 # ── Sparklines ─────────────────────────────────────────────────────────────
@@ -307,10 +287,10 @@ with L:
         colors = ["#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444","#06b6d4","#8b5cf6","#f97316"]
         fig = go.Figure(go.Pie(labels=sd["Sector"], values=sd["Count"], hole=0.6,
             marker_colors=colors[:len(sd)], textinfo="percent", textfont_size=8))
-        fig.update_layout(height=220, margin=dict(t=0,b=0,l=0,r=110),
+        fig.update_layout(height=240, margin=dict(t=10,b=10,l=10,r=10),
             paper_bgcolor="white", plot_bgcolor="white", showlegend=True,
-            legend=dict(font=dict(size=11), orientation="v", x=1.02, y=0.5, xanchor="left"),
-            annotations=[dict(text=f"<b>{total}</b><br><span style='font-size:10px'>Total</span>", x=0.35, y=0.5, font_size=13, showarrow=False)])
+            legend=dict(font=dict(size=10), orientation="h", x=0.5, y=-0.15, xanchor="center"),
+            annotations=[dict(text=f"<b>{total}</b><br><span style='font-size:10px'>Total</span>", x=0.5, y=0.5, font_size=13, showarrow=False)])
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     with ac:
@@ -330,7 +310,6 @@ with L:
             st.markdown(f'<div class="alrt" style="border-left:3px solid #dc2626;"><div class="aico" style="background:#fef2f2;">⚠️</div><div><div class="at">High Risk — {c["name"][:18]}</div><div class="ad">{c["symbol"]} · Risk {c["financial_risk_score"]}/100 · {c["sector"][:14]}</div><div class="atm">Just now</div></div></div>', unsafe_allow_html=True)
         if lg2:
             c = lg2[0]
-            # Rregulluar NameError: d['green_score'] u zëvendësua me c['green_score']
             st.markdown(f'<div class="alrt" style="border-left:3px solid #f59e0b;"><div class="aico" style="background:#fffbeb;">🏭</div><div><div class="at">Low ESG — {c["name"][:18]}</div><div class="ad">{c["symbol"]} · Green {c["green_score"]}/100 · ESG {c["esg_rating"]}</div><div class="atm">15m ago</div></div></div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="alrt" style="border-left:3px solid #22c55e;"><div class="aico" style="background:#f0fdf4;">✅</div><div><div class="at">ESG Scores Healthy</div><div class="ad">All tracked companies have stable ESG metrics</div><div class="atm">Updated now</div></div></div>', unsafe_allow_html=True)
@@ -339,7 +318,6 @@ with L:
 
 # ── RIGHT COLUMN — CHAT ────────────────────────────────────────────
 with R:
-    # ── AI Header ──────────────────────────────────────────────────
     st.markdown(
         """
         <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;
@@ -363,7 +341,6 @@ with R:
         unsafe_allow_html=True
     )
 
-    # ── Quick Buttons ──────────────────────────────────────────────
     with st.container(border=True):
         st.markdown("**Quick Analysis**")
         qa, qb = st.columns(2, gap="small")
@@ -378,14 +355,14 @@ with R:
             if st.button("⚠️  Companies to Watch", use_container_width=True, key="btn_q4"):
                 st.session_state.active_question = "Which companies should investors watch carefully based on high financial risk?"
 
-    # ── Chat Input & Arrow Button ──────────────────────────────────
-    ci, cb = st.columns([5, 1])
-    with ci:
-        user_input = st.text_input("_", placeholder="Ask me anything...", label_visibility="collapsed", key="chat_input")
-    with cb:
-        send_clicked = st.button("➤", use_container_width=True, key="send_btn")
+    # Formi siguron pastrimin e input-it në mënyrë automatike pas dërgimit
+    with st.form(key="chat_form", clear_on_submit=True):
+        ci, cb = st.columns([5, 1])
+        with ci:
+            user_input = st.text_input("_", placeholder="Ask me anything...", label_visibility="collapsed", key="form_input")
+        with cb:
+            send_clicked = st.form_submit_button("➤")
 
-    # ── Logic for Triggering Query ─────────────────────────────────
     if send_clicked and user_input:
         st.session_state.active_question = user_input
     
@@ -406,7 +383,6 @@ with R:
         st.session_state.processing = False
         st.rerun()
 
-    # ── Chat History ───────────────────────────────────────────────
     for msg in st.session_state.messages[-6:]:
         cls = "umsg" if msg["role"] == "user" else "amsg"
         st.markdown(f'<div class="{cls}">{msg["content"]}</div>', unsafe_allow_html=True)
