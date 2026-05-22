@@ -126,14 +126,21 @@ def ask_gemini(question, data_str):
             f"Company data:\n{data_str}\n"
             f"Question: {question}"
         )
-        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+        # Kalimi në endpoint-in v1beta i cili pranon saktësisht këtë strukturë modeli
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+        
+        # Sigurohemi që header-i është specifikuar si JSON
+        headers = {'Content-Type': 'application/json'}
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
-        resp = requests.post(url, json=payload, timeout=30)
+        
+        resp = requests.post(url, headers=headers, json=payload, timeout=30)
         resp.raise_for_status()
+        
         result = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
         st.session_state[cache_key] = result
         return result
     except Exception as e:
+        # Kjo do të të tregojë saktësisht kodin e gabimit nëse diçka tjetër dështon
         return f"Gabim: {str(e)[:200]}"
 
 # ── Sparklines ─────────────────────────────────────────────────────────────
