@@ -126,7 +126,7 @@ def ask_gemini(question, data_str):
             f"Company data:\n{data_str}\n"
             f"Question: {question}"
         )
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={GEMINI_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_KEY}"
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
         resp = requests.post(url, json=payload, timeout=30)
         resp.raise_for_status()
