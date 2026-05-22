@@ -407,16 +407,33 @@ with R:
         del st.session_state.auto_q
 
     if question:
-        st.session_state.messages.append({"role": "user", "content": question})
-        with st.spinner("Analyzing..."):
-            info = "".join([
-                f"- {d['symbol']} ({d['name']}): Risk={d['financial_risk_score']}, "
-                f"Green={d['green_score']}, ESG={d['esg_rating']}\n"
-                for d in data[:10]
-            ])
-            answer = ask_gemini(question, info)
-        st.session_state.messages.append({"role": "ai", "content": answer})
-        st.rerun()
+        if question and not st.session_state.get("processing", False):
+
+    st.session_state.processing = True
+
+    st.session_state.messages.append({
+        "role": "user",
+        "content": question
+    })
+
+    with st.spinner("Analyzing..."):
+
+        info = "".join([
+            f"- {d['symbol']} ({d['name']}): "
+            f"Risk={d['financial_risk_score']}, "
+            f"Green={d['green_score']}, "
+            f"ESG={d['esg_rating']}\n"
+            for d in data[:5]
+        ])
+
+        answer = ask_gemini(question, info)
+
+    st.session_state.messages.append({
+        "role": "ai",
+        "content": answer
+    })
+
+    st.session_state.processing = False
 
     for msg in st.session_state.messages[-6:]:
         cls = "umsg" if msg["role"] == "user" else "amsg"
