@@ -357,15 +357,19 @@ with R:
         st.markdown("**Quick Analysis**")
         qa, qb = st.columns(2, gap="small")
         with qa:
-            if st.button("🏆  Best Investment",    use_container_width=True, key="q1"):
-                st.session_state.auto_q = "Which company is the best investment combining financial and ESG performance?"
-            if st.button("📊  Risk Comparison",    use_container_width=True, key="q3"):
-                st.session_state.auto_q = "Compare highest and lowest risk companies"
+            if st.button("🏆  Best Investment", width="stretch", key="btn_q1"):
+                st.session_state.active_question = "Which company is the best investment combining financial and ESG performance?"
+            if st.button("📊  Risk Comparison", width="stretch", key="btn_q3"):
+                st.session_state.active_question = "Compare highest and lowest risk companies."
         with qb:
-            if st.button("🌍  ESG Leaders",        use_container_width=True, key="q2"):
-                st.session_state.auto_q = "Which companies are the ESG sustainability leaders?"
-            if st.button("⚠️  Companies to Watch", use_container_width=True, key="q4"):
-                st.session_state.auto_q = "Which companies should investors watch carefully?"
+            if st.button("🌍  ESG Leaders", width="stretch", key="btn_q2"):
+                st.session_state.active_question = "Which companies are the ESG sustainability leaders?"
+            if st.button("⚠️  Companies to Watch", width="stretch", key="btn_q4"):
+                st.session_state.active_question = "Which companies should investors watch carefully based on high financial risk?"
+
+    # ── Butoni i dërgimit shigjetë (➤) ──────────────────────────────
+    with cb:
+        send_clicked = st.button("➤", width="stretch", key="trigger_send_btn")
 
     # ── Chat Input ─────────────────────────────────────────────────
     ci, cb = st.columns([5, 1])
