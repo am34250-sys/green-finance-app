@@ -110,7 +110,10 @@ def ask_gemini(question, data_str):
             f"Company data:\n{data_str}\n"
             f"Question: {question}"
         )
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+        
+        # KJO ËSHTË URL-JA E SAKTË DHE E PËRDITËSUAR:
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+        
         headers = {'Content-Type': 'application/json'}
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
         
